@@ -1,0 +1,21 @@
+import type { Account, AccountStatus } from "../types/account";
+import { apiClient } from "./client";
+
+export const getAccounts = async (): Promise<Account[]> => {
+  const res = await apiClient.get("/accounts");
+  return res.data;
+};
+
+
+export const createAccount = async (payload: {
+  name: string;
+  industry?: string;
+  status: AccountStatus;
+}): Promise<Account> => {
+  const res = await apiClient.post("/accounts", payload);
+  return res.data;
+};
+
+export const deleteAccount = async (id: string): Promise<void> => {
+  await apiClient.delete(`/accounts/${id}`);
+};
