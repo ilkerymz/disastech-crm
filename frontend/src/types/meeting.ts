@@ -11,7 +11,7 @@ export interface Meeting {
   accountStatus?: string;
   nextAction?: string;
   userName?: string;
-  nextActionDate?: Date;
+  nextActionDate?: string;
   notes?: string;
   mailStatus: "NOT_SENT" | "SENT";
 }

@@ -30,7 +30,7 @@ export default function CalendarPage() {
   );
 
   const calendarEvents = visibleMeetings.map((m) => ({
-    id: m.id,
+    id: String(m.id),
     title: m.nextAction || "Toplantı",
     start: m.nextActionDate,
     extendedProps: {

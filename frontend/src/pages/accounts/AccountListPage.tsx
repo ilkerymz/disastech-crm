@@ -47,7 +47,7 @@ export default function AccountListPage() {
       {/* GRID */}
       <Grid container spacing={2}>
         {accounts.map((account) => (
-          <Grid item xs={12} md={6} lg={4} key={account.id}>
+          <Grid size={{ xs: 12, md: 6, lg: 4 }} key={account.id}>
             <AccountCard account={account} />
           </Grid>
         ))}
