@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteAccount } from "../../api/account.api";
 import type { Account } from "../../types/account";
 import ContactList from "../contacts/ContactList";
+import { getAccountStatusLabel } from "../../constants/accountStatus";
 
 interface Props {
   account: Account;
@@ -44,7 +45,7 @@ export default function AccountCard({ account }: Props) {
         </Stack>
 
         <Typography variant="body2" color="text.secondary">
-          Durum: ACTIVE
+          Durum: {getAccountStatusLabel(account.status)}
         </Typography>
 
         <Divider sx={{ my: 1 }} />

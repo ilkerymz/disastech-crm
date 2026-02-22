@@ -50,4 +50,38 @@ public class ContactServiceImpl implements ContactService {
 
         return contactRepository.findByAccountId(accountId);
     }
+
+    @Override
+    public void delete(String accountId) {
+        UUID id = UUID.fromString(accountId);
+
+        ContactEntity contact = contactRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Account Not Found"));
+
+        contact.setActive(false);
+
+        contactRepository.save(contact);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ContactEntity> findByAccountAndActiveTrue(UUID accountId) {
+
+        return contactRepository.findByAccountIdAndActiveTrue(accountId);
+    }
+
+    @Override
+    public ContactEntity update(UUID contactId, String fullName, String email) {
+        ContactEntity contact = contactRepository.findById(contactId)
+                .orElseThrow(() -> new EntityNotFoundException("Contact Not Found"));
+
+        if(!contact.getActive()) {
+            throw new IllegalStateException("Cannot Update Passive Contact");
+        }
+
+        contact.setFullName(fullName);
+        contact.setEmail(email);
+
+        return contactRepository.save(contact);
+    }
 }

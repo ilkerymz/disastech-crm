@@ -14,21 +14,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createAccount } from "../../api/account.api";
 import type { AccountStatus } from "../../types/account";
+import {
+  ACCOUNT_STATUS_OPTIONS,
+  getAccountStatusLabel,
+} from "../../constants/accountStatus";
 
 interface Props {
   open: boolean;
   onClose: () => void;
 }
-
-const ACCOUNT_STATUSES: AccountStatus[] = [
-  "ACTIVE",
-  "POTENTIAL",
-  "DEMO",
-  "PARTNER",
-  "CONSULTANT",
-  "SUPPLIER",
-  "PASSIVE",
-];
 
 export default function CreateAccountDialog({ open, onClose }: Props) {
   const queryClient = useQueryClient();
@@ -93,9 +87,9 @@ export default function CreateAccountDialog({ open, onClose }: Props) {
             onChange={handleChange}
             fullWidth
           >
-            {ACCOUNT_STATUSES.map((status) => (
+            {ACCOUNT_STATUS_OPTIONS.map((status) => (
               <MenuItem key={status} value={status}>
-                {status}
+                {getAccountStatusLabel(status)}
               </MenuItem>
             ))}
           </TextField>

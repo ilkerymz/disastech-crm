@@ -1,16 +1,22 @@
 import { Typography, Button, Box } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 import { useState } from "react";
 
-import { getAccounts } from "../../api/account.api";
+import { deleteAccount, getActiveAccounts } from "../../api/account.api";
 import type { Account } from "../../types/account";
-import AccountCard from "../../components/accounts/AccountCard";
 import CreateAccountDialog from "../../components/accounts/CreateAccountDialog";
+import UpdateAccountDialog from "../../components/accounts/UpdateAccountDialog";
+import AccountContactsDialog from "../../components/accounts/AccountContactsDialog";
+import AccountTable from "../../components/tables/AccountTable";
 
 export default function AccountListPage() {
   const [open, setOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
+  const [contactsOpen, setContactsOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+
+  const queryClient = useQueryClient();
 
   const {
     data: accounts = [],
@@ -18,7 +24,14 @@ export default function AccountListPage() {
     isError,
   } = useQuery<Account[]>({
     queryKey: ["accounts"],
-    queryFn: getAccounts,
+    queryFn: getActiveAccounts,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+    },
   });
 
   if (isLoading) return <div>Yükleniyor...</div>;
@@ -44,19 +57,42 @@ export default function AccountListPage() {
         </Button>
       </Box>
 
-      {/* GRID */}
-      <Grid container spacing={2}>
-        {accounts.map((account) => (
-          <Grid item xs={12} md={6} lg={4} key={account.id}>
-            <AccountCard account={account} />
-          </Grid>
-        ))}
-      </Grid>
+      {/* TABLE */}
+      <AccountTable
+        rows={accounts}
+        onEdit={(account) => {
+          setSelectedAccount(account);
+          setUpdateOpen(true);
+        }}
+        onDelete={(id) => deleteMutation.mutate(id)}
+        onOpenContacts={(account) => {
+          setSelectedAccount(account);
+          setContactsOpen(true);
+        }}
+      />
 
       {/* DIALOG */}
       <CreateAccountDialog
         open={open}
         onClose={() => setOpen(false)}
+      />
+
+      <UpdateAccountDialog
+        open={updateOpen}
+        account={selectedAccount}
+        onClose={() => {
+          setUpdateOpen(false);
+          setSelectedAccount(null);
+        }}
+      />
+
+      <AccountContactsDialog
+        open={contactsOpen}
+        account={selectedAccount}
+        onClose={() => {
+          setContactsOpen(false);
+          setSelectedAccount(null);
+        }}
       />
     </Box>
   );

@@ -26,13 +26,13 @@ export default function CalendarPage() {
   }
 
   const visibleMeetings = meetings.filter(
-    (m) => m.status !== "CANCELLED" && m.nextActionDate
+    (m) => m.status !== "CANCELLED" && m.start
   );
 
   const calendarEvents = visibleMeetings.map((m) => ({
-    id: m.id,
+    id: String(m.id),
     title: m.nextAction || "Toplantı",
-    start: m.nextActionDate,
+    start: m.start,
     extendedProps: {
       meeting: m,
     },

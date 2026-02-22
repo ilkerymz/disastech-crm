@@ -13,6 +13,7 @@ import InvitePreviewDialog from "../../components/meetings/InvitePreviewDialog";
 import CreateMeetingDialog from "../../components/meetings/CreateMeetingDialog";
 import UpdateMeetingDialog from "../../components/meetings/UpdateMeetingDialog";
 import MeetingDetailDialog from "../../components/meetings/MeetingDetailDialog";
+import MeetingNotesDialog from "../../components/meetings/MeetingNotesDialog";
 
 import {
   Box,
@@ -36,6 +37,8 @@ export default function MeetingListPage() {
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailMeeting, setDetailMeeting] = useState<Meeting | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [notesMeeting, setNotesMeeting] = useState<Meeting | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -54,10 +57,14 @@ export default function MeetingListPage() {
     setPreviewOpen(true);
   };
 
-  const handleConfirmSend = async () => {
+  const handleConfirmSend = async (description: string) => {
     if (!selectedId) return;
 
-    await sendMeetingInvite(selectedId);
+    const normalizedDescription = description.trim();
+    await sendMeetingInvite(
+      selectedId,
+      normalizedDescription ? normalizedDescription : undefined
+    );
 
     setPreviewOpen(false);
     setPreviewData(null);
@@ -69,17 +76,6 @@ export default function MeetingListPage() {
   // --------------------
   // UPDATE
   // --------------------
-  const formatDateForPayload = (value?: string | Date) => {
-    if (!value) return "";
-    if (value instanceof Date) {
-      return value.toISOString().slice(0, 10);
-    }
-    if (value.includes("T")) {
-      return value.split("T")[0];
-    }
-    return value;
-  };
-
   const handleEditMeeting = (meeting: Meeting) => {
     setSelectedMeeting(meeting);
     setUpdateOpen(true);
@@ -88,23 +84,16 @@ export default function MeetingListPage() {
   const handleUpdateMeeting = async (updated: Partial<Meeting>) => {
     if (!selectedMeeting) return;
 
-    const nextActionDateValue =
-      updated.nextActionDate === ""
-        ? undefined
-        : updated.nextActionDate ?? selectedMeeting.nextActionDate;
-
-    const nextActionDate = formatDateForPayload(nextActionDateValue);
     const payload = {
-      notes: updated.notes ?? selectedMeeting.notes,
       subject: updated.subject ?? selectedMeeting.subject,
+      start: updated.start ?? selectedMeeting.start,
+      end: updated.end ?? selectedMeeting.end,
       nextAction: updated.nextAction ?? selectedMeeting.nextAction,
-      nextActionDate: nextActionDate || undefined,
-      ...(nextActionDate
-        ? {
-            start: `${nextActionDate}T09:00`,
-            end: `${nextActionDate}T10:00`,
-          }
-        : {}),
+      salesStatus: updated.salesStatus ?? selectedMeeting.salesStatus,
+      salesStage: updated.salesStage ?? selectedMeeting.salesStage,
+      offerAmount: updated.offerAmount ?? selectedMeeting.offerAmount,
+      lastMeetingDate: updated.lastMeetingDate ?? selectedMeeting.lastMeetingDate,
+      lossReason: updated.lossReason ?? selectedMeeting.lossReason,
       status: updated.status ?? selectedMeeting.status,
     };
 
@@ -125,6 +114,11 @@ export default function MeetingListPage() {
   const handleOpenDetail = (meeting: Meeting) => {
     setDetailMeeting(meeting);
     setDetailOpen(true);
+  };
+
+  const handleOpenNotes = (meeting: Meeting) => {
+    setNotesMeeting(meeting);
+    setNotesOpen(true);
   };
 
   if (isLoading) return <CircularProgress />;
@@ -169,6 +163,7 @@ export default function MeetingListPage() {
           onRequestSendInvite={handleRequestSendInvite}
           onEdit={handleEditMeeting}
           onCancel={handleCancelMeeting}
+          onOpenNotes={handleOpenNotes}
           onRowClick={handleOpenDetail}
         />
       )}
@@ -186,6 +181,15 @@ export default function MeetingListPage() {
         onClose={() => {
           setDetailOpen(false);
           setDetailMeeting(null);
+        }}
+      />
+
+      <MeetingNotesDialog
+        open={notesOpen}
+        meeting={notesMeeting}
+        onClose={() => {
+          setNotesOpen(false);
+          setNotesMeeting(null);
         }}
       />
     </>

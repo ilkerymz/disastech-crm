@@ -2,6 +2,7 @@ package com.disastech.crm.api.account;
 
 import com.disastech.crm.api.account.dto.AccountResponse;
 import com.disastech.crm.api.account.dto.CreateAccountRequest;
+import com.disastech.crm.api.account.dto.UpdateAccountRequest;
 import com.disastech.crm.application.account.AccountService;
 import com.disastech.crm.domain.account.AccountEntity;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -40,6 +42,22 @@ public class AccountController {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
+
+    @GetMapping
+    @RequestMapping("/active")
+    public List<AccountResponse> listActive() {
+        return accountService.findByActiveTrue()
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @PutMapping("/{id}")
+    public AccountResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateAccountRequest request) {
+        AccountEntity account = accountService.update(id, request.industry, request.status);
+        return toResponse(account);
+    }
+
 
     @DeleteMapping("{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

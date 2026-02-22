@@ -1,11 +1,11 @@
 package com.disastech.crm.api.meeting;
 
-import com.disastech.crm.api.meeting.dto.CreateMeetingRequest;
-import com.disastech.crm.api.meeting.dto.MeetingInvitePreviewResponse;
-import com.disastech.crm.api.meeting.dto.MeetingResponse;
-import com.disastech.crm.api.meeting.dto.UpdateMeetingRequest;
+import com.disastech.crm.api.meeting.dto.*;
+import com.disastech.crm.application.meeting.MeetingNoteService;
 import com.disastech.crm.application.meeting.MeetingService;
 import com.disastech.crm.domain.meeting.MeetingEntity;
+import com.disastech.crm.domain.meeting.MeetingNoteEntity;
+import com.disastech.crm.domain.repository.MeetingNoteRepository;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +18,13 @@ import java.util.stream.Collectors;
 public class MeetingController {
 
     private final MeetingService meetingService;
+    private final MeetingNoteService meetingNoteService;
+    private final MeetingNoteRepository meetingNoteRepository;
 
-    public MeetingController(MeetingService meetingService) {
+    public MeetingController(MeetingService meetingService, MeetingNoteService meetingNoteService, MeetingNoteRepository meetingNoteRepository) {
         this.meetingService = meetingService;
+        this.meetingNoteService = meetingNoteService;
+        this.meetingNoteRepository = meetingNoteRepository;
     }
 
     // CREATE
@@ -33,11 +37,14 @@ public class MeetingController {
                 request.ownerUserId,
                 request.start,
                 request.end,
-                request.notes,
                 request.subject,
                 request.outcome,
                 request.nextAction,
-                request.nextActionDate
+                request.salesStatus,
+                request.salesStage,
+                request.offerAmount,
+                request.lastMeetingDate,
+                request.lossReason
         );
 
         return toResponse(meeting);
@@ -54,12 +61,15 @@ public class MeetingController {
                 id,
                 request.start,
                 request.end,
-                request.notes,
                 request.status,
                 request.subject,
                 request.outcome,
                 request.nextAction,
-                request.nextActionDate
+                request.salesStatus,
+                request.salesStage,
+                request.offerAmount,
+                request.lastMeetingDate,
+                request.lossReason
         );
 
         return toResponse(meeting);
@@ -90,14 +100,28 @@ public class MeetingController {
     }
 
     @PostMapping("/{id}/send-invite")
-    public void sendInvite(@PathVariable UUID id) {
-        meetingService.sendMeetingInvite(id);
+    public void sendInvite(@PathVariable UUID id, String description) {
+        meetingService.sendMeetingInvite(id, description);
     }
 
     // INVITE PREVIEW
     @GetMapping("/{id}/invite-preview")
     public MeetingInvitePreviewResponse invitePreview(@PathVariable UUID id) {
         return meetingService.getInvitePreview(id);
+    }
+
+    @GetMapping("/{id}/notes")
+    public List<MeetingNoteResponse> getNotes(@PathVariable UUID id) {
+        return meetingNoteService.getNotes(id).stream()
+                .map(this::toNoteResponse)
+                .toList();
+    }
+
+    @PostMapping("/{id}/notes")
+    public MeetingNoteResponse addNote(@PathVariable UUID id,
+                                       @Valid @RequestBody AddMeetingNoteRequest request) {
+        MeetingNoteEntity saved = meetingNoteService.addNote(id, request.note);
+        return toNoteResponse(saved);
     }
 
 
@@ -124,10 +148,29 @@ public class MeetingController {
         r.end = entity.getMeetingEnd();
         r.status = entity.getStatus();
         r.notes = entity.getNotes();
-        r.nextActionDate = entity.getNextActionDate();
         r.mailStatus = entity.getMailStatus();
         r.subject = entity.getSubject();
+        r.salesStatus = entity.getSalesStatus();
+        r.salesStage = entity.getSalesStage();
+        r.offerAmount = entity.getOfferAmount();
+        r.lastMeetingDate = entity.getLastMeetingDate();
+        r.lossReason = entity.getLossReason();
+        r.noteCount = meetingNoteRepository.countByMeetingIdAndDeletedFalse(entity.getId());
+        r.latestNote = meetingNoteRepository
+                .findFirstByMeetingIdAndDeletedFalseOrderByCreatedAtDesc(entity.getId())
+                .map(MeetingNoteEntity::getNote)
+                .orElse(null);
 
+
+        return r;
+    }
+
+    private MeetingNoteResponse toNoteResponse(MeetingNoteEntity e) {
+        MeetingNoteResponse r = new MeetingNoteResponse();
+        r.id = e.getId();
+        r.note = e.getNote();
+        r.createdAt = e.getCreatedAt();
+        r.createdByName = e.getCreatedBy() != null ? e.getCreatedBy().getFullName() : null;
         return r;
     }
 }

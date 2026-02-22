@@ -14,5 +14,14 @@ public interface ContactService {
     );
 
     List<ContactEntity> findByAccount(UUID accountId);
+    void delete(String accountId);
+
+    List<ContactEntity> findByAccountAndActiveTrue(UUID accountId);
+
+    ContactEntity update(UUID contactId, String fullName, String email);
+
+
+
+
 
 }

@@ -1,8 +1,8 @@
 package com.disastech.crm.api.meeting.dto;
 
-import com.disastech.crm.domain.meeting.MailStatus;
-import com.disastech.crm.domain.meeting.MeetingOutcome;
+import com.disastech.crm.domain.meeting.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,6 +28,14 @@ public class MeetingResponse {
     public String subject;
     public MeetingOutcome outcome;
     public String nextAction;
-    public LocalDate nextActionDate;
     public MailStatus mailStatus;
+    public SalesStatus salesStatus;
+    public SalesStage salesStage;
+    public BigDecimal offerAmount;
+
+    public LocalDate lastMeetingDate;
+
+    public LossReason lossReason;
+    public String latestNote;
+    public Long noteCount;
 }

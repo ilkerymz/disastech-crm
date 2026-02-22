@@ -69,7 +69,7 @@ public class GoogleCalendarService {
      * 📧 İLK DAVETİYEYİ GÖNDERİR
      * Attendees burada İLK KEZ eklenir
      */
-    public void sendInvite(MeetingEntity meeting) throws Exception {
+    public void sendInvite(MeetingEntity meeting, String description) throws Exception {
 
         if (meeting.getGoogleEventId() == null) {
             throw new IllegalStateException("Google event yok");
@@ -97,6 +97,11 @@ public class GoogleCalendarService {
         }
 
         event.setAttendees(attendees);
+
+        String eventDescFooter = event.getDescription();
+        String eventFinalDesc = description + "\n\n" + eventDescFooter;
+
+        event.setDescription(eventFinalDesc);
 
         calendar.events()
                 .update(calendarId, meeting.getGoogleEventId(), event)

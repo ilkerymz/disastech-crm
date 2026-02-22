@@ -7,17 +7,37 @@ import {
   TextField,
   Stack,
   Autocomplete,
+  MenuItem,
+  Box,
 } from "@mui/material";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getAccounts } from "../../api/account.api";
-import { getContactsByAccount } from "../../api/contact.api";
+import { getActiveAccounts } from "../../api/account.api";
+import { getContactsByAccountAndActiveTrue } from "../../api/contact.api";
 import { createMeeting } from "../../api/meeting.api";
 import { getUserIdFromToken } from "../../auth/token";
 
 import type { Account } from "../../types/account";
 import type { Contact } from "../../types/contact";
+import type {
+  LossReason,
+  SalesStage,
+  SalesStatus,
+} from "../../types/meeting";
+import {
+  SALES_STATUS_OPTIONS,
+  SALES_STATUS_COLORS,
+  getSalesStatusLabel,
+} from "../../constants/salesStatus";
+import {
+  SALES_STAGE_OPTIONS,
+  getSalesStageLabel,
+} from "../../constants/salesStage";
+import {
+  LOSS_REASON_OPTIONS,
+  getLossReasonLabel,
+} from "../../constants/lossReason";
 
 interface Props {
   open: boolean;
@@ -35,8 +55,13 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
 
   const [form, setForm] = useState({
     subject: "",
-    date: "", // ⬅️ TEK TARİH
-    notes: "",
+    start: "",
+    end: "",
+    salesStatus: "PROGRESSING" as SalesStatus,
+    salesStage: "FIRST_MEETING" as SalesStage,
+    offerAmount: "",
+    lastMeetingDate: "",
+    lossReason: "" as LossReason | "",
   });
 
   // -----------------------------
@@ -44,12 +69,12 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
   // -----------------------------
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ["accounts"],
-    queryFn: getAccounts,
+    queryFn: getActiveAccounts,
   });
 
   const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ["contacts", selectedAccount?.id],
-    queryFn: () => getContactsByAccount(selectedAccount!.id),
+    queryFn: () => getContactsByAccountAndActiveTrue(selectedAccount!.id),
     enabled: !!selectedAccount,
   });
 
@@ -68,25 +93,34 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
   // HANDLER
   // -----------------------------
   const handleSubmit = () => {
-    if (!selectedAccount || !form.date) return;
+    if (!selectedAccount || !form.start || !form.end) return;
 
     const ownerUserId = getUserIdFromToken();
     if (!ownerUserId) return;
 
-    // 🔑 TEK TARİHTEN TÜREV
-    const start = `${form.date}T09:00`;
-    const end = `${form.date}T10:00`;
-    const nextActionDate = form.date;
+    const startDate = new Date(form.start);
+    const endDate = new Date(form.end);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      return;
+    }
+    if (endDate <= startDate) return;
+
+    const start = form.start;
+    const end = form.end;
 
     mutation.mutate({
       accountId: selectedAccount.id,
       contactId: selectedContact?.id,
       ownerUserId,
       subject: form.subject,
-      notes: form.notes,
       start,
       end,
-      nextActionDate,
+      salesStatus: form.salesStatus,
+      salesStage: form.salesStage,
+      offerAmount:
+        form.offerAmount === "" ? undefined : Number(form.offerAmount),
+      lastMeetingDate: form.lastMeetingDate || undefined,
+      lossReason: form.lossReason || undefined,
     });
   };
 
@@ -136,26 +170,126 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
           />
 
           {/* NOTLAR */}
-<TextField
-  label="Notlar"
-  value={form.notes}
-  onChange={(e) =>
-    setForm({ ...form, notes: e.target.value })
-  }
-  fullWidth
-  multiline
-  minRows={4}
-  placeholder="Toplantı ile ilgili notlar..."
-/>
-
-
-          {/* TEK TARİH */}
           <TextField
-            label="Tarih"
-            type="date"
-            value={form.date}
+            select
+            label="Satış Durumu"
+            value={form.salesStatus}
             onChange={(e) =>
-              setForm({ ...form, date: e.target.value })
+              setForm({ ...form, salesStatus: e.target.value as SalesStatus })
+            }
+            SelectProps={{
+              renderValue: (value) => {
+                const status = value as SalesStatus;
+                return (
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box
+                      sx={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: "50%",
+                        bgcolor: SALES_STATUS_COLORS[status],
+                        border: "1px solid #1f1f1f",
+                      }}
+                    />
+                    <span>{getSalesStatusLabel(status)}</span>
+                  </Stack>
+                );
+              },
+            }}
+            fullWidth
+          >
+            {SALES_STATUS_OPTIONS.map((status) => (
+              <MenuItem key={status} value={status}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: "50%",
+                      bgcolor: SALES_STATUS_COLORS[status],
+                      border: "1px solid #1f1f1f",
+                    }}
+                  />
+                  <span>{getSalesStatusLabel(status)}</span>
+                </Stack>
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            label="Satış Aşaması"
+            value={form.salesStage}
+            onChange={(e) =>
+              setForm({ ...form, salesStage: e.target.value as SalesStage })
+            }
+            fullWidth
+          >
+            {SALES_STAGE_OPTIONS.map((stage) => (
+              <MenuItem key={stage} value={stage}>
+                {getSalesStageLabel(stage)}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            label="Teklif Tutarı (₺)"
+            type="number"
+            value={form.offerAmount}
+            onChange={(e) =>
+              setForm({ ...form, offerAmount: e.target.value })
+            }
+            fullWidth
+          />
+
+          <TextField
+            label="Son Toplantı"
+            type="date"
+            value={form.lastMeetingDate}
+            onChange={(e) =>
+              setForm({ ...form, lastMeetingDate: e.target.value })
+            }
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+
+          <TextField
+            select
+            label="Kaybedilme Nedeni"
+            value={form.lossReason}
+            onChange={(e) =>
+              setForm({ ...form, lossReason: e.target.value as LossReason | "" })
+            }
+            fullWidth
+          >
+            <MenuItem value="">-</MenuItem>
+            {LOSS_REASON_OPTIONS.map((reason) => (
+              <MenuItem key={reason} value={reason}>
+                {getLossReasonLabel(reason)}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {/* BAŞLANGIÇ */}
+          <TextField
+            label="Başlangıç"
+            type="datetime-local"
+            value={form.start}
+            onChange={(e) =>
+              setForm({ ...form, start: e.target.value })
+            }
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            required
+          />
+
+          {/* BİTİŞ */}
+          <TextField
+            label="Bitiş"
+            type="datetime-local"
+            value={form.end}
+            onChange={(e) =>
+              setForm({ ...form, end: e.target.value })
             }
             InputLabelProps={{ shrink: true }}
             fullWidth
@@ -172,7 +306,9 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
           disabled={
             mutation.isPending ||
             !selectedAccount ||
-            !form.date ||
+            !form.start ||
+            !form.end ||
+            new Date(form.end) <= new Date(form.start) ||
             !getUserIdFromToken()
           }
         >

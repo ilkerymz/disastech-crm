@@ -7,7 +7,9 @@ import {
   Typography,
   Stack,
   Chip,
+  TextField,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 
 import type { InvitePreview } from "../../api/meeting.api";
 
@@ -15,7 +17,7 @@ interface Props {
   open: boolean;
   preview: InvitePreview | null;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: (description: string) => void;
 }
 
 export default function InvitePreviewDialog({
@@ -24,6 +26,14 @@ export default function InvitePreviewDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setDescription("");
+    }
+  }, [open]);
+
   if (!preview) return null;
 
   return (
@@ -52,12 +62,26 @@ export default function InvitePreviewDialog({
               {preview.description}
             </Typography>
           </div>
+
+          <TextField
+            label="Toplantı Açıklaması"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Ornek: Gorusmede teknik detaylar ve sonraki adimlar paylasilacaktir."
+            helperText="Bu alan opsiyoneldir. Bos birakirsaniz maile eklenmez."
+            multiline
+            minRows={4}
+            fullWidth
+          />
         </Stack>
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onCancel}>İptal</Button>
-        <Button variant="contained" onClick={onConfirm}>
+        <Button
+          variant="contained"
+          onClick={() => onConfirm(description)}
+        >
           Maili Gönder
         </Button>
       </DialogActions>

@@ -6,6 +6,10 @@ export const getAccounts = async (): Promise<Account[]> => {
   return res.data;
 };
 
+export const getActiveAccounts = async (): Promise<Account[]> => {
+  const res = await apiClient.get("/accounts/active");
+  return res.data;
+};
 
 export const createAccount = async (payload: {
   name: string;
@@ -18,4 +22,15 @@ export const createAccount = async (payload: {
 
 export const deleteAccount = async (id: string): Promise<void> => {
   await apiClient.delete(`/accounts/${id}`);
+};
+
+export const updateAccount = async (
+  id: string,
+  payload: {
+    industry?: string;
+    status: AccountStatus;
+  }
+): Promise<Account> => {
+  const res = await apiClient.put(`/accounts/${id}`, payload);
+  return res.data;
 };
