@@ -3,9 +3,7 @@ package com.disastech.crm.application.meeting;
 import com.disastech.crm.api.meeting.dto.MeetingInvitePreviewResponse;
 import com.disastech.crm.domain.account.AccountEntity;
 import com.disastech.crm.domain.contact.ContactEntity;
-import com.disastech.crm.domain.meeting.MailStatus;
-import com.disastech.crm.domain.meeting.MeetingEntity;
-import com.disastech.crm.domain.meeting.MeetingOutcome;
+import com.disastech.crm.domain.meeting.*;
 import com.disastech.crm.domain.repository.AccountRepository;
 import com.disastech.crm.domain.repository.ContactRepository;
 import com.disastech.crm.domain.repository.MeetingRepository;
@@ -20,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,11 +57,14 @@ public class MeetingServiceImpl implements MeetingService {
             UUID ownerUserId,
             LocalDateTime start,
             LocalDateTime end,
-            String notes,
             String subject,
             MeetingOutcome outcome,
             String nextAction,
-            LocalDate nextActionDate
+            SalesStatus salesStatus,
+            SalesStage salesStage,
+            BigDecimal offerAmount,
+            LocalDate lastMeetingDate,
+            LossReason lossReason
     ) {
 
         AccountEntity account = accountRepository.findById(accountId)
@@ -88,13 +90,17 @@ public class MeetingServiceImpl implements MeetingService {
         meeting.setContact(contact);
         meeting.setMeetingStart(start);
         meeting.setMeetingEnd(end);
-        meeting.setNotes(notes);
         meeting.setStatus("PLANNED");
         meeting.setDeleted(false);
         meeting.setSubject(subject);
         meeting.setOutcome(outcome);
         meeting.setNextAction(nextAction);
-        meeting.setNextActionDate(nextActionDate);
+        meeting.setSalesStatus(salesStatus);
+        meeting.setSalesStage(salesStage);
+        meeting.setOfferAmount(offerAmount);
+        meeting.setLastMeetingDate(lastMeetingDate);
+        meeting.setLossReason(lossReason);
+
 
         MeetingEntity meetingResponse = meetingRepository.save(meeting);
 
@@ -113,7 +119,7 @@ public class MeetingServiceImpl implements MeetingService {
     }
 
     @Transactional
-    public void sendMeetingInvite(UUID meetingId) {
+    public void sendMeetingInvite(UUID meetingId, String description) {
 
         MeetingEntity meeting = meetingRepository.findById(meetingId)
                 .orElseThrow(() -> new EntityNotFoundException("Meeting not found"));
@@ -123,7 +129,7 @@ public class MeetingServiceImpl implements MeetingService {
         }
 
         try {
-            googleCalendarService.sendInvite(meeting);
+            googleCalendarService.sendInvite(meeting, description);
 
             meeting.setMailStatus(MailStatus.SENT);
             meeting.setMailSentAt(LocalDateTime.now());
@@ -157,12 +163,15 @@ public class MeetingServiceImpl implements MeetingService {
             UUID meetingId,
             LocalDateTime start,
             LocalDateTime end,
-            String notes,
             String status,
             String subject,
             MeetingOutcome outcome,
             String nextAction,
-            LocalDate nextActionDate
+            SalesStatus salesStatus,
+            SalesStage salesStage,
+            BigDecimal offerAmount,
+            LocalDate lastMeetingDate,
+            LossReason lossReason
     ) {
 
         MeetingEntity meeting = meetingRepository.findById(meetingId)
@@ -170,12 +179,15 @@ public class MeetingServiceImpl implements MeetingService {
 
         if (start != null) meeting.setMeetingStart(start);
         if (end != null) meeting.setMeetingEnd(end);
-        if (notes != null) meeting.setNotes(notes);
         if (status != null) meeting.setStatus(status);
         if (subject != null) meeting.setSubject(subject);
         if (outcome != null) meeting.setOutcome(outcome);
         if (nextAction != null) meeting.setNextAction(nextAction);
-        if (nextActionDate != null) meeting.setNextActionDate(nextActionDate);
+        if(salesStatus != null) meeting.setSalesStatus(salesStatus);
+        if(salesStage != null) meeting.setSalesStage(salesStage);
+        if(offerAmount != null) meeting.setOfferAmount(offerAmount);
+        if(lastMeetingDate != null) meeting.setLastMeetingDate(lastMeetingDate);
+        if(lossReason != null) meeting.setLossReason(lossReason);
 
         MeetingEntity saved = meetingRepository.save(meeting);
 

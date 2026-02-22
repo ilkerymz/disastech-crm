@@ -1,7 +1,9 @@
 package com.disastech.crm.api.contact;
 
+import com.disastech.crm.api.account.dto.AccountResponse;
 import com.disastech.crm.api.contact.dto.ContactResponse;
 import com.disastech.crm.api.contact.dto.CreateContactRequest;
+import com.disastech.crm.api.contact.dto.UpdateContactRequest;
 import com.disastech.crm.application.contact.ContactService;
 import com.disastech.crm.domain.contact.ContactEntity;
 import jakarta.validation.Valid;
@@ -36,6 +38,21 @@ public class ContactController {
         return toResponse(contact);
     }
 
+    @DeleteMapping("{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public  void delete(@PathVariable String id) {
+        contactService.delete(id);
+    }
+
+    @GetMapping
+    @RequestMapping("/active")
+    public List<ContactResponse> listByAccountAndActive(@RequestParam UUID accountId) {
+        return contactService.findByAccountAndActiveTrue(accountId)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     // LIST BY ACCOUNT
     @GetMapping
     public List<ContactResponse> listByAccount(@RequestParam UUID accountId) {
@@ -44,6 +61,12 @@ public class ContactController {
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @PutMapping("/{id}")
+    public ContactResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateContactRequest request){
+        ContactEntity contact = contactService.update(id, request.fullName, request.email);
+        return toResponse(contact);
     }
 
     // ----------------

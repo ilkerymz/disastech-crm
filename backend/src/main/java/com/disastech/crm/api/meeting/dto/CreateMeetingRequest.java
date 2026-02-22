@@ -1,11 +1,15 @@
 package com.disastech.crm.api.meeting.dto;
 
+import com.disastech.crm.domain.meeting.LossReason;
 import com.disastech.crm.domain.meeting.MeetingOutcome;
+import com.disastech.crm.domain.meeting.SalesStage;
+import com.disastech.crm.domain.meeting.SalesStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,9 +31,6 @@ public class CreateMeetingRequest {
     @NotNull(message = "end time is required")
     public LocalDateTime end;
 
-    @Size(max = 1000, message = "notes can be max 1000 characters")
-    public String notes;
-
     @Size(max = 255)
     public String subject;
 
@@ -38,5 +39,14 @@ public class CreateMeetingRequest {
     @Size(max = 255)
     public String nextAction;
 
-    public LocalDate nextActionDate;
+    public SalesStatus salesStatus;
+
+    public SalesStage salesStage;
+
+    public BigDecimal offerAmount;
+
+    public LocalDate lastMeetingDate;
+
+    public LossReason lossReason;
+
 }

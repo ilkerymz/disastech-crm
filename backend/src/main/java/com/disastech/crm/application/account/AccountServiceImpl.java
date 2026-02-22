@@ -41,15 +41,34 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<AccountEntity> findByActiveTrue() {return accountRepository.findByActiveTrue();}
+
+    @Override
+    public AccountEntity update(UUID accountId, String industry, AccountStatus status) {
+        AccountEntity account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new EntityNotFoundException("Account Not Found"));
+
+        if(!account.getActive()){
+            throw new IllegalStateException("Cannot Update Passive Account");
+        }
+
+        account.setIndustry(industry);
+        account.setStatus(status);
+
+        return accountRepository.save(account);
+    }
+
+    @Override
     public void delete(String accountId) {
         UUID id = UUID.fromString(accountId);
 
         AccountEntity account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account Not Found"));
 
-        contactRepository.deleteAllByAccountId(id);
+        account.setActive(false);
 
-        accountRepository.delete(account);
+        accountRepository.save(account);
     }
 
 

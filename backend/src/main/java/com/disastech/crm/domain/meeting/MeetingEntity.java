@@ -5,8 +5,11 @@ import com.disastech.crm.domain.contact.ContactEntity;
 import com.disastech.crm.domain.user.UserEntity;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +32,10 @@ public class MeetingEntity {
     @JoinColumn(name = "owner_user_id", nullable = false)
     private UserEntity owner;
 
+    @OneToMany(mappedBy = "meeting")
+    private List<MeetingNoteEntity> meetingNotes = new ArrayList<>();
+
+
     @Column(name = "meeting_start", nullable = false)
     private LocalDateTime meetingStart;
 
@@ -38,6 +45,65 @@ public class MeetingEntity {
     @Column(nullable = false, length = 50)
     private String status;
     // PLANNED, COMPLETED, CANCELLED, POSTPONED
+
+    @Column(name = "sales_status")
+    @Enumerated(EnumType.STRING)
+    private SalesStatus salesStatus;
+
+    @Column(name = "sales_stage")
+    @Enumerated(EnumType.STRING)
+    private SalesStage salesStage;
+
+    @Column(name = "offer_amount")
+    private BigDecimal offerAmount;
+
+    @Column(name = "last_meeting_date")
+    private LocalDate lastMeetingDate;
+
+    @Column(name = "loss_reason")
+    @Enumerated(EnumType.STRING)
+    private LossReason lossReason;
+
+    public BigDecimal getOfferAmount() {
+        return offerAmount;
+    }
+
+    public void setOfferAmount(BigDecimal offerAmount) {
+        this.offerAmount = offerAmount;
+    }
+
+    public LocalDate getLastMeetingDate() {
+        return lastMeetingDate;
+    }
+
+    public void setLastMeetingDate(LocalDate lastMeetingDate) {
+        this.lastMeetingDate = lastMeetingDate;
+    }
+
+    public LossReason getLossReason() {
+        return lossReason;
+    }
+
+    public void setLossReason(LossReason lossReason) {
+        this.lossReason = lossReason;
+    }
+
+    public SalesStatus getSalesStatus() {
+        return salesStatus;
+    }
+
+    public SalesStage getSalesStage() {
+        return salesStage;
+    }
+
+    public void setSalesStage(SalesStage salesStage) {
+        this.salesStage = salesStage;
+    }
+
+    public void setSalesStatus(SalesStatus salesStatus) {
+        this.salesStatus = salesStatus;
+    }
+//SOLD, PROGRESSING, LOST
 
     @Column(columnDefinition = "TEXT")
     private String notes;
@@ -52,7 +118,6 @@ public class MeetingEntity {
     @Column(length = 255)
     private String nextAction;
 
-    private LocalDate nextActionDate;
 
     @Column(name = "google_event_id", unique = true)
     private String googleEventId;
@@ -220,9 +285,6 @@ public class MeetingEntity {
         this.nextAction = nextAction;
     }
 
-    public LocalDate getNextActionDate() {
-        return nextActionDate;
-    }
 
     public MailStatus getMailStatus() {
         return mailStatus;
@@ -248,7 +310,4 @@ public class MeetingEntity {
         this.mailSentByUserId = mailSentByUserId;
     }
 
-    public void setNextActionDate(LocalDate nextActionDate) {
-        this.nextActionDate = nextActionDate;
-    }
 }

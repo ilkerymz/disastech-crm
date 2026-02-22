@@ -7,9 +7,29 @@ import {
   Button,
   TextField,
   Stack,
+  MenuItem,
+  Box,
 } from "@mui/material";
 
-import type { Meeting } from "../../types/meeting";
+import type {
+  LossReason,
+  Meeting,
+  SalesStage,
+  SalesStatus,
+} from "../../types/meeting";
+import {
+  SALES_STATUS_OPTIONS,
+  SALES_STATUS_COLORS,
+  getSalesStatusLabel,
+} from "../../constants/salesStatus";
+import {
+  SALES_STAGE_OPTIONS,
+  getSalesStageLabel,
+} from "../../constants/salesStage";
+import {
+  LOSS_REASON_OPTIONS,
+  getLossReasonLabel,
+} from "../../constants/lossReason";
 
 interface Props {
   open: boolean;
@@ -24,24 +44,26 @@ export default function UpdateMeetingDialog({
   onClose,
   onSave,
 }: Props) {
-  const [form, setForm] = useState({
-    subject: "",
-    notes: "",
-    nextAction: "",
-    nextActionDate: "",
-    status: "PLANNED",
-  });
-
-  const formatDateForInput = (value?: string | Date) => {
+  const formatDateTimeForInput = (value?: string) => {
     if (!value) return "";
-    if (value instanceof Date) {
-      return value.toISOString().slice(0, 10);
-    }
     if (value.includes("T")) {
-      return value.split("T")[0];
+      return value.slice(0, 16);
     }
     return value;
   };
+
+  const [form, setForm] = useState({
+    subject: "",
+    start: "",
+    end: "",
+    nextAction: "",
+    salesStatus: "PROGRESSING" as SalesStatus,
+    salesStage: "FIRST_MEETING" as SalesStage,
+    offerAmount: "",
+    lastMeetingDate: "",
+    lossReason: "" as LossReason | "",
+    status: "PLANNED",
+  });
 
   // 🔥 Meeting değiştiğinde formu resetle
   useEffect(() => {
@@ -49,9 +71,17 @@ export default function UpdateMeetingDialog({
 
     setForm({
       subject: meeting.subject ?? "",
-      notes: meeting.notes ?? "",
+      start: formatDateTimeForInput(meeting.start),
+      end: formatDateTimeForInput(meeting.end),
       nextAction: meeting.nextAction ?? "",
-      nextActionDate: formatDateForInput(meeting.nextActionDate),
+      salesStatus: meeting.salesStatus ?? "PROGRESSING",
+      salesStage: meeting.salesStage ?? "FIRST_MEETING",
+      offerAmount:
+        meeting.offerAmount === undefined || meeting.offerAmount === null
+          ? ""
+          : String(meeting.offerAmount),
+      lastMeetingDate: meeting.lastMeetingDate ?? "",
+      lossReason: meeting.lossReason ?? "",
       status: meeting.status ?? "PLANNED",
     });
   }, [meeting]);
@@ -74,13 +104,24 @@ export default function UpdateMeetingDialog({
           />
 
           <TextField
-            label="Notlar"
-            multiline
-            minRows={3}
-            value={form.notes}
+            label="Başlangıç"
+            type="datetime-local"
+            value={form.start}
             onChange={(e) =>
-              setForm({ ...form, notes: e.target.value })
+              setForm({ ...form, start: e.target.value })
             }
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+
+          <TextField
+            label="Bitiş"
+            type="datetime-local"
+            value={form.end}
+            onChange={(e) =>
+              setForm({ ...form, end: e.target.value })
+            }
+            InputLabelProps={{ shrink: true }}
             fullWidth
           />
 
@@ -94,15 +135,105 @@ export default function UpdateMeetingDialog({
           />
 
           <TextField
-            label="Sonraki Adım Tarihi"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={form.nextActionDate}
+            select
+            label="Satış Durumu"
+            value={form.salesStatus}
             onChange={(e) =>
-              setForm({ ...form, nextActionDate: e.target.value })
+              setForm({ ...form, salesStatus: e.target.value as SalesStatus })
+            }
+            SelectProps={{
+              renderValue: (value) => {
+                const status = value as SalesStatus;
+                return (
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box
+                      sx={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: "50%",
+                        bgcolor: SALES_STATUS_COLORS[status],
+                        border: "1px solid #1f1f1f",
+                      }}
+                    />
+                    <span>{getSalesStatusLabel(status)}</span>
+                  </Stack>
+                );
+              },
+            }}
+            fullWidth
+          >
+            {SALES_STATUS_OPTIONS.map((status) => (
+              <MenuItem key={status} value={status}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: "50%",
+                      bgcolor: SALES_STATUS_COLORS[status],
+                      border: "1px solid #1f1f1f",
+                    }}
+                  />
+                  <span>{getSalesStatusLabel(status)}</span>
+                </Stack>
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            label="Satış Aşaması"
+            value={form.salesStage}
+            onChange={(e) =>
+              setForm({ ...form, salesStage: e.target.value as SalesStage })
+            }
+            fullWidth
+          >
+            {SALES_STAGE_OPTIONS.map((stage) => (
+              <MenuItem key={stage} value={stage}>
+                {getSalesStageLabel(stage)}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            label="Teklif Tutarı (₺)"
+            type="number"
+            value={form.offerAmount}
+            onChange={(e) =>
+              setForm({ ...form, offerAmount: e.target.value })
             }
             fullWidth
           />
+
+          <TextField
+            label="Son Toplantı"
+            type="date"
+            value={form.lastMeetingDate}
+            onChange={(e) =>
+              setForm({ ...form, lastMeetingDate: e.target.value })
+            }
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+          />
+
+          <TextField
+            select
+            label="Kaybedilme Nedeni"
+            value={form.lossReason}
+            onChange={(e) =>
+              setForm({ ...form, lossReason: e.target.value as LossReason | "" })
+            }
+            fullWidth
+          >
+            <MenuItem value="">-</MenuItem>
+            {LOSS_REASON_OPTIONS.map((reason) => (
+              <MenuItem key={reason} value={reason}>
+                {getLossReasonLabel(reason)}
+              </MenuItem>
+            ))}
+          </TextField>
+
         </Stack>
       </DialogContent>
 
@@ -110,7 +241,17 @@ export default function UpdateMeetingDialog({
         <Button onClick={onClose}>İptal</Button>
         <Button
           variant="contained"
-          onClick={() => onSave(form)}
+          onClick={() =>
+            onSave({
+              ...form,
+              start: form.start || undefined,
+              end: form.end || undefined,
+              offerAmount:
+                form.offerAmount === "" ? undefined : Number(form.offerAmount),
+              lastMeetingDate: form.lastMeetingDate || undefined,
+              lossReason: form.lossReason || undefined,
+            })
+          }
         >
           Kaydet
         </Button>
