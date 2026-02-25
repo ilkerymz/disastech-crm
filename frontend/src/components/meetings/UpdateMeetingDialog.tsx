@@ -44,6 +44,27 @@ export default function UpdateMeetingDialog({
   onClose,
   onSave,
 }: Props) {
+  const toLocalDateTimestamp = (value: string): number | null => {
+    const match = value.match(
+      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
+    );
+    if (!match) return null;
+
+    const [, year, month, day, hour, minute, second] = match;
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second ?? 0),
+      0
+    );
+
+    if (Number.isNaN(date.getTime())) return null;
+    return date.getTime();
+  };
+
   const formatDateTimeForInput = (value?: string) => {
     if (!value) return "";
     if (value.includes("T")) {
@@ -85,6 +106,31 @@ export default function UpdateMeetingDialog({
       status: meeting.status ?? "PLANNED",
     });
   }, [meeting]);
+
+  const startTimestamp = form.start ? toLocalDateTimestamp(form.start) : null;
+  const endTimestamp = form.end ? toLocalDateTimestamp(form.end) : null;
+  const hasInvalidStart = form.start !== "" && startTimestamp === null;
+  const hasInvalidEnd = form.end !== "" && endTimestamp === null;
+  const hasInvalidTimeRange =
+    form.start !== "" &&
+    form.end !== "" &&
+    startTimestamp !== null &&
+    endTimestamp !== null &&
+    endTimestamp <= startTimestamp;
+
+  const handleSave = () => {
+    if (hasInvalidStart || hasInvalidEnd || hasInvalidTimeRange) return;
+
+    onSave({
+      ...form,
+      start: form.start || undefined,
+      end: form.end || undefined,
+      offerAmount:
+        form.offerAmount === "" ? undefined : Number(form.offerAmount),
+      lastMeetingDate: form.lastMeetingDate || undefined,
+      lossReason: form.lossReason || undefined,
+    });
+  };
 
   if (!meeting) return null;
 
@@ -241,17 +287,8 @@ export default function UpdateMeetingDialog({
         <Button onClick={onClose}>İptal</Button>
         <Button
           variant="contained"
-          onClick={() =>
-            onSave({
-              ...form,
-              start: form.start || undefined,
-              end: form.end || undefined,
-              offerAmount:
-                form.offerAmount === "" ? undefined : Number(form.offerAmount),
-              lastMeetingDate: form.lastMeetingDate || undefined,
-              lossReason: form.lossReason || undefined,
-            })
-          }
+          onClick={handleSave}
+          disabled={hasInvalidStart || hasInvalidEnd || hasInvalidTimeRange}
         >
           Kaydet
         </Button>
