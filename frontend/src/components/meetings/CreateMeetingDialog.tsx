@@ -47,6 +47,27 @@ interface Props {
 export default function CreateMeetingDialog({ open, onClose }: Props) {
   const queryClient = useQueryClient();
 
+  const toLocalDateTimestamp = (value: string): number | null => {
+    const match = value.match(
+      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
+    );
+    if (!match) return null;
+
+    const [, year, month, day, hour, minute, second] = match;
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second ?? 0),
+      0
+    );
+
+    if (Number.isNaN(date.getTime())) return null;
+    return date.getTime();
+  };
+
   // -----------------------------
   // STATE
   // -----------------------------
@@ -98,12 +119,12 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
     const ownerUserId = getUserIdFromToken();
     if (!ownerUserId) return;
 
-    const startDate = new Date(form.start);
-    const endDate = new Date(form.end);
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    const startTimestamp = toLocalDateTimestamp(form.start);
+    const endTimestamp = toLocalDateTimestamp(form.end);
+    if (startTimestamp === null || endTimestamp === null) {
       return;
     }
-    if (endDate <= startDate) return;
+    if (endTimestamp <= startTimestamp) return;
 
     const start = form.start;
     const end = form.end;
@@ -123,6 +144,13 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
       lossReason: form.lossReason || undefined,
     });
   };
+
+  const startTimestamp = form.start ? toLocalDateTimestamp(form.start) : null;
+  const endTimestamp = form.end ? toLocalDateTimestamp(form.end) : null;
+  const hasInvalidTimeRange =
+    startTimestamp === null ||
+    endTimestamp === null ||
+    endTimestamp <= startTimestamp;
 
   // -----------------------------
   // RENDER
@@ -308,7 +336,7 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
             !selectedAccount ||
             !form.start ||
             !form.end ||
-            new Date(form.end) <= new Date(form.start) ||
+            hasInvalidTimeRange ||
             !getUserIdFromToken()
           }
         >
