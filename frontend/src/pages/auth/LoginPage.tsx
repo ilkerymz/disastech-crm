@@ -10,7 +10,11 @@ import {
   Typography,
 } from "@mui/material";
 import { login } from "../../api/auth.api";
-import { isAuthenticated, setToken } from "../../auth/token";
+import {
+  getPostLoginRoute,
+  isAuthenticated,
+  setToken,
+} from "../../auth/token";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -21,7 +25,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      navigate("/meetings", { replace: true });
+      navigate(getPostLoginRoute(), { replace: true });
     }
   }, [navigate]);
 
@@ -38,7 +42,7 @@ export default function LoginPage() {
         return;
       }
       setToken(token);
-      navigate("/meetings", { replace: true });
+      navigate(getPostLoginRoute(), { replace: true });
     } catch (err) {
       setError("Giriş başarısız. Bilgilerinizi kontrol edin.");
     } finally {

@@ -10,7 +10,10 @@ import {
 import EventIcon from "@mui/icons-material/Event";
 import BusinessIcon from "@mui/icons-material/Business";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
+import { clearToken, isSuperAdmin } from "../auth/token";
 
 interface Props {
   width: number;
@@ -18,6 +21,11 @@ interface Props {
 
 export default function Sidebar({ width }: Props) {
   const navigate = useNavigate();
+  const superAdmin = isSuperAdmin();
+  const handleLogout = () => {
+    clearToken();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <Drawer
@@ -30,40 +38,61 @@ export default function Sidebar({ width }: Props) {
         },
       }}
     >
-      <Toolbar sx={{ justifyContent: "center" }}>
-        <Box
-          component="img"
-          src="/src/assets/svg-disastech-logotype/disastech-logotype.svg"
-          alt="Disastech"
-          sx={{
-            maxWidth: "80%",
-            maxHeight: 28,
-            objectFit: "contain",
-          }}
-        />
-      </Toolbar>
-      <List>
-        <ListItemButton onClick={() => navigate("/meetings")}>
-          <ListItemIcon>
-            <EventIcon />
-          </ListItemIcon>
-          <ListItemText primary="Toplantılar" />
-        </ListItemButton>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Toolbar sx={{ justifyContent: "center" }}>
+          <Box
+            component="img"
+            src="/src/assets/svg-disastech-logotype/disastech-logotype.svg"
+            alt="Disastech"
+            sx={{
+              maxWidth: "80%",
+              maxHeight: 28,
+              objectFit: "contain",
+            }}
+          />
+        </Toolbar>
 
-        <ListItemButton onClick={() => navigate("/accounts")}>
-          <ListItemIcon>
-            <BusinessIcon />
-          </ListItemIcon>
-          <ListItemText primary="Firmalar" />
-        </ListItemButton>
+        <List sx={{ flexGrow: 1 }}>
+          <ListItemButton onClick={() => navigate("/meetings")}>
+            <ListItemIcon>
+              <EventIcon />
+            </ListItemIcon>
+            <ListItemText primary="Toplantılar" />
+          </ListItemButton>
 
-        <ListItemButton onClick={() => navigate("/calendar")}>
-          <ListItemIcon>
-            <CalendarMonthIcon />
-          </ListItemIcon>
-          <ListItemText primary="Takvim" />
-        </ListItemButton>
-      </List>
+          <ListItemButton onClick={() => navigate("/accounts")}>
+            <ListItemIcon>
+              <BusinessIcon />
+            </ListItemIcon>
+            <ListItemText primary="Firmalar" />
+          </ListItemButton>
+
+          <ListItemButton onClick={() => navigate("/calendar")}>
+            <ListItemIcon>
+              <CalendarMonthIcon />
+            </ListItemIcon>
+            <ListItemText primary="Takvim" />
+          </ListItemButton>
+
+          {superAdmin && (
+            <ListItemButton onClick={() => navigate("/admin/users")}>
+              <ListItemIcon>
+                <AdminPanelSettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Admin" />
+            </ListItemButton>
+          )}
+        </List>
+
+        <List>
+          <ListItemButton onClick={handleLogout}>
+            <ListItemIcon>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Çıkış Yap" />
+          </ListItemButton>
+        </List>
+      </Box>
     </Drawer>
   );
 }
