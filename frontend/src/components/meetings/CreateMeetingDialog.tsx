@@ -47,26 +47,6 @@ interface Props {
 export default function CreateMeetingDialog({ open, onClose }: Props) {
   const queryClient = useQueryClient();
 
-  const toLocalDateTimestamp = (value: string): number | null => {
-    const match = value.match(
-      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
-    );
-    if (!match) return null;
-
-    const [, year, month, day, hour, minute, second] = match;
-    const date = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
-      Number(second ?? 0),
-      0
-    );
-
-    if (Number.isNaN(date.getTime())) return null;
-    return date.getTime();
-  };
 
   // -----------------------------
   // STATE
@@ -119,12 +99,10 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
     const ownerUserId = getUserIdFromToken();
     if (!ownerUserId) return;
 
-    const startTimestamp = toLocalDateTimestamp(form.start);
-    const endTimestamp = toLocalDateTimestamp(form.end);
-    if (startTimestamp === null || endTimestamp === null) {
-      return;
-    }
-    if (endTimestamp <= startTimestamp) return;
+    const startDate = new Date(form.start);
+const endDate = new Date(form.end);
+
+if (endDate <= startDate) return;
 
     const start = form.start;
     const end = form.end;
@@ -145,8 +123,13 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
     });
   };
 
-  const startTimestamp = form.start ? toLocalDateTimestamp(form.start) : null;
-  const endTimestamp = form.end ? toLocalDateTimestamp(form.end) : null;
+ const startTimestamp = form.start
+  ? new Date(form.start).getTime()
+  : null;
+
+const endTimestamp = form.end
+  ? new Date(form.end).getTime()
+  : null;
   const hasInvalidTimeRange =
     startTimestamp === null ||
     endTimestamp === null ||
