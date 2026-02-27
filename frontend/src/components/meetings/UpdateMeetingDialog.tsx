@@ -83,10 +83,11 @@ export default function UpdateMeetingDialog({
     });
   }, [meeting]);
 
-  const hasInvalidTimeRange =
+  const hasInvalidTimeRange = Boolean(
     form.start &&
-    form.end &&
-    (form.end.isBefore(form.start) || form.end.isSame(form.start));
+      form.end &&
+      (form.end.isBefore(form.start) || form.end.isSame(form.start))
+  );
 
   const handleSave = () => {
     if (hasInvalidTimeRange) return;
