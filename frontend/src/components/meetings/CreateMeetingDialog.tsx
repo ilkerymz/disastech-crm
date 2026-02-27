@@ -12,6 +12,11 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/tr';
 
 import { getActiveAccounts } from "../../api/account.api";
 import { getContactsByAccountAndActiveTrue } from "../../api/contact.api";
@@ -47,7 +52,6 @@ interface Props {
 export default function CreateMeetingDialog({ open, onClose }: Props) {
   const queryClient = useQueryClient();
 
-
   // -----------------------------
   // STATE
   // -----------------------------
@@ -56,8 +60,8 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
 
   const [form, setForm] = useState({
     subject: "",
-    start: "",
-    end: "",
+    start: null as Dayjs | null,
+    end: null as Dayjs | null,
     salesStatus: "PROGRESSING" as SalesStatus,
     salesStage: "FIRST_MEETING" as SalesStage,
     offerAmount: "",
@@ -99,13 +103,14 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
     const ownerUserId = getUserIdFromToken();
     if (!ownerUserId) return;
 
-    const startDate = new Date(form.start);
-const endDate = new Date(form.end);
+    // Zaman kontrolü
+    if (form.end.isBefore(form.start) || form.end.isSame(form.start)) {
+      return;
+    }
 
-if (endDate <= startDate) return;
-
-    const start = form.start;
-    const end = form.end;
+    // Dayjs objelerini ISO string'e çevir
+    const start = form.start.format('YYYY-MM-DDTHH:mm:ss');
+    const end = form.end.format('YYYY-MM-DDTHH:mm:ss');
 
     mutation.mutate({
       accountId: selectedAccount.id,
@@ -123,17 +128,11 @@ if (endDate <= startDate) return;
     });
   };
 
- const startTimestamp = form.start
-  ? new Date(form.start).getTime()
-  : null;
-
-const endTimestamp = form.end
-  ? new Date(form.end).getTime()
-  : null;
   const hasInvalidTimeRange =
-    startTimestamp === null ||
-    endTimestamp === null ||
-    endTimestamp <= startTimestamp;
+    !form.start ||
+    !form.end ||
+    form.end.isBefore(form.start) ||
+    form.end.isSame(form.start);
 
   // -----------------------------
   // RENDER
@@ -143,55 +142,75 @@ const endTimestamp = form.end
       <DialogTitle>Yeni Toplantı</DialogTitle>
 
       <DialogContent>
-        <Stack spacing={2} mt={1}>
-          {/* FİRMA */}
-          <Autocomplete
-            options={accounts}
-            getOptionLabel={(option) => option.name}
-            value={selectedAccount}
-            onChange={(_, value) => {
-              setSelectedAccount(value);
-              setSelectedContact(null);
-            }}
-            renderInput={(params) => (
-              <TextField {...params} label="Firma" />
-            )}
-          />
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="tr">
+          <Stack spacing={2} mt={1}>
+            {/* FİRMA */}
+            <Autocomplete
+              options={accounts}
+              getOptionLabel={(option) => option.name}
+              value={selectedAccount}
+              onChange={(_, value) => {
+                setSelectedAccount(value);
+                setSelectedContact(null);
+              }}
+              renderInput={(params) => (
+                <TextField {...params} label="Firma" />
+              )}
+            />
 
-          {/* İLGİLİ KİŞİ */}
-          <Autocomplete
-            options={contacts}
-            getOptionLabel={(option) => option.fullName}
-            value={selectedContact}
-            onChange={(_, value) => setSelectedContact(value)}
-            disabled={!selectedAccount}
-            renderInput={(params) => (
-              <TextField {...params} label="İlgili Kişi" />
-            )}
-          />
+            {/* İLGİLİ KİŞİ */}
+            <Autocomplete
+              options={contacts}
+              getOptionLabel={(option) => option.fullName}
+              value={selectedContact}
+              onChange={(_, value) => setSelectedContact(value)}
+              disabled={!selectedAccount}
+              renderInput={(params) => (
+                <TextField {...params} label="İlgili Kişi" />
+              )}
+            />
 
-          {/* KONU */}
-          <TextField
-            label="Konu"
-            value={form.subject}
-            onChange={(e) =>
-              setForm({ ...form, subject: e.target.value })
-            }
-            fullWidth
-          />
+            {/* KONU */}
+            <TextField
+              label="Konu"
+              value={form.subject}
+              onChange={(e) =>
+                setForm({ ...form, subject: e.target.value })
+              }
+              fullWidth
+            />
 
-          {/* NOTLAR */}
-          <TextField
-            select
-            label="Satış Durumu"
-            value={form.salesStatus}
-            onChange={(e) =>
-              setForm({ ...form, salesStatus: e.target.value as SalesStatus })
-            }
-            SelectProps={{
-              renderValue: (value) => {
-                const status = value as SalesStatus;
-                return (
+            {/* SATIŞ DURUMU */}
+            <TextField
+              select
+              label="Satış Durumu"
+              value={form.salesStatus}
+              onChange={(e) =>
+                setForm({ ...form, salesStatus: e.target.value as SalesStatus })
+              }
+              SelectProps={{
+                renderValue: (value) => {
+                  const status = value as SalesStatus;
+                  return (
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Box
+                        sx={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: "50%",
+                          bgcolor: SALES_STATUS_COLORS[status],
+                          border: "1px solid #1f1f1f",
+                        }}
+                      />
+                      <span>{getSalesStatusLabel(status)}</span>
+                    </Stack>
+                  );
+                },
+              }}
+              fullWidth
+            >
+              {SALES_STATUS_OPTIONS.map((status) => (
+                <MenuItem key={status} value={status}>
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Box
                       sx={{
@@ -204,109 +223,102 @@ const endTimestamp = form.end
                     />
                     <span>{getSalesStatusLabel(status)}</span>
                   </Stack>
-                );
-              },
-            }}
-            fullWidth
-          >
-            {SALES_STATUS_OPTIONS.map((status) => (
-              <MenuItem key={status} value={status}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box
-                    sx={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: "50%",
-                      bgcolor: SALES_STATUS_COLORS[status],
-                      border: "1px solid #1f1f1f",
-                    }}
-                  />
-                  <span>{getSalesStatusLabel(status)}</span>
-                </Stack>
-              </MenuItem>
-            ))}
-          </TextField>
+                </MenuItem>
+              ))}
+            </TextField>
 
-          <TextField
-            select
-            label="Satış Aşaması"
-            value={form.salesStage}
-            onChange={(e) =>
-              setForm({ ...form, salesStage: e.target.value as SalesStage })
-            }
-            fullWidth
-          >
-            {SALES_STAGE_OPTIONS.map((stage) => (
-              <MenuItem key={stage} value={stage}>
-                {getSalesStageLabel(stage)}
-              </MenuItem>
-            ))}
-          </TextField>
+            {/* SATIŞ AŞAMASI */}
+            <TextField
+              select
+              label="Satış Aşaması"
+              value={form.salesStage}
+              onChange={(e) =>
+                setForm({ ...form, salesStage: e.target.value as SalesStage })
+              }
+              fullWidth
+            >
+              {SALES_STAGE_OPTIONS.map((stage) => (
+                <MenuItem key={stage} value={stage}>
+                  {getSalesStageLabel(stage)}
+                </MenuItem>
+              ))}
+            </TextField>
 
-          <TextField
-            label="Teklif Tutarı (₺)"
-            type="number"
-            value={form.offerAmount}
-            onChange={(e) =>
-              setForm({ ...form, offerAmount: e.target.value })
-            }
-            fullWidth
-          />
+            {/* TEKLİF TUTARI */}
+            <TextField
+              label="Teklif Tutarı (₺)"
+              type="number"
+              value={form.offerAmount}
+              onChange={(e) =>
+                setForm({ ...form, offerAmount: e.target.value })
+              }
+              fullWidth
+            />
 
-          <TextField
-            label="Son Toplantı"
-            type="date"
-            value={form.lastMeetingDate}
-            onChange={(e) =>
-              setForm({ ...form, lastMeetingDate: e.target.value })
-            }
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
+            {/* SON TOPLANTI */}
+            <TextField
+              label="Son Toplantı"
+              type="date"
+              value={form.lastMeetingDate}
+              onChange={(e) =>
+                setForm({ ...form, lastMeetingDate: e.target.value })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
 
-          <TextField
-            select
-            label="Kaybedilme Nedeni"
-            value={form.lossReason}
-            onChange={(e) =>
-              setForm({ ...form, lossReason: e.target.value as LossReason | "" })
-            }
-            fullWidth
-          >
-            <MenuItem value="">-</MenuItem>
-            {LOSS_REASON_OPTIONS.map((reason) => (
-              <MenuItem key={reason} value={reason}>
-                {getLossReasonLabel(reason)}
-              </MenuItem>
-            ))}
-          </TextField>
+            {/* KAYBEDİLME NEDENİ */}
+            <TextField
+              select
+              label="Kaybedilme Nedeni"
+              value={form.lossReason}
+              onChange={(e) =>
+                setForm({ ...form, lossReason: e.target.value as LossReason | "" })
+              }
+              fullWidth
+            >
+              <MenuItem value="">-</MenuItem>
+              {LOSS_REASON_OPTIONS.map((reason) => (
+                <MenuItem key={reason} value={reason}>
+                  {getLossReasonLabel(reason)}
+                </MenuItem>
+              ))}
+            </TextField>
 
-          {/* BAŞLANGIÇ */}
-          <TextField
-            label="Başlangıç"
-            type="datetime-local"
-            value={form.start}
-            onChange={(e) =>
-              setForm({ ...form, start: e.target.value })
-            }
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            required
-          />
+            {/* BAŞLANGIÇ */}
+            <DateTimePicker
+              label="Başlangıç"
+              value={form.start}
+              onChange={(newValue) =>
+                setForm({ ...form, start: newValue })
+              }
+              ampm={false}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                }
+              }}
+            />
 
-          {/* BİTİŞ */}
-          <TextField
-            label="Bitiş"
-            type="datetime-local"
-            value={form.end}
-            onChange={(e) =>
-              setForm({ ...form, end: e.target.value })
-            }
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            required
-          />
-        </Stack>
+            {/* BİTİŞ */}
+            <DateTimePicker
+              label="Bitiş"
+              value={form.end}
+              onChange={(newValue) =>
+                setForm({ ...form, end: newValue })
+              }
+              ampm={false}
+              minDateTime={form.start || undefined}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                }
+              }}
+            />
+          </Stack>
+        </LocalizationProvider>
       </DialogContent>
 
       <DialogActions>
@@ -317,8 +329,6 @@ const endTimestamp = form.end
           disabled={
             mutation.isPending ||
             !selectedAccount ||
-            !form.start ||
-            !form.end ||
             hasInvalidTimeRange ||
             !getUserIdFromToken()
           }
