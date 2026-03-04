@@ -14,6 +14,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
 import { clearToken, isSuperAdmin } from "../auth/token";
+import disastechLogo from "../assets/svg-disastech-logotype/disastech-logotype.svg";
 
 interface Props {
   width: number;
@@ -42,7 +43,7 @@ export default function Sidebar({ width }: Props) {
         <Toolbar sx={{ justifyContent: "center" }}>
           <Box
             component="img"
-            src="/src/assets/svg-disastech-logotype/disastech-logotype.svg"
+            src={disastechLogo}
             alt="Disastech"
             sx={{
               maxWidth: "80%",
