@@ -14,7 +14,10 @@ export const getActiveAccounts = async (): Promise<Account[]> => {
 export const createAccount = async (payload: {
   name: string;
   industry?: string;
+  phone?: string;
+  email?: string;
   status: AccountStatus;
+  responsibleUserId?: string;
 }): Promise<Account> => {
   const res = await apiClient.post("/accounts", payload);
   return res.data;
@@ -28,7 +31,10 @@ export const updateAccount = async (
   id: string,
   payload: {
     industry?: string;
+    phone?: string;
+    email?: string;
     status: AccountStatus;
+    responsibleUserId?: string;
   }
 ): Promise<Account> => {
   const res = await apiClient.put(`/accounts/${id}`, payload);

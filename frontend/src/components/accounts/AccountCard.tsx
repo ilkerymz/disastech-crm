@@ -48,6 +48,14 @@ export default function AccountCard({ account }: Props) {
           Durum: {getAccountStatusLabel(account.status)}
         </Typography>
 
+        <Typography variant="body2" color="text.secondary">
+          Telefon: {account.phone || "-"}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary">
+          E-posta: {account.email || "-"}
+        </Typography>
+
         <Divider sx={{ my: 1 }} />
 
         <ContactList accountId={account.id} />

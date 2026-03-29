@@ -7,6 +7,7 @@ import {
   Toolbar,
   Box,
 } from "@mui/material";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import EventIcon from "@mui/icons-material/Event";
 import BusinessIcon from "@mui/icons-material/Business";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -15,12 +16,14 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
 import { clearToken, isSuperAdmin } from "../auth/token";
 import disastechLogo from "../assets/svg-disastech-logotype/disastech-logotype.svg";
+import disastechIcon from "../assets/svg-D-icon-disastech/D-icon-disastech.svg";
 
 interface Props {
   width: number;
+  open: boolean;
 }
 
-export default function Sidebar({ width }: Props) {
+export default function Sidebar({ width, open }: Props) {
   const navigate = useNavigate();
   const superAdmin = isSuperAdmin();
   const handleLogout = () => {
@@ -33,20 +36,27 @@ export default function Sidebar({ width }: Props) {
       variant="permanent"
       sx={{
         width,
+        flexShrink: 0,
         [`& .MuiDrawer-paper`]: {
           width,
           boxSizing: "border-box",
+          overflowX: "hidden",
+          transition: (theme) =>
+            theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.shorter,
+            }),
         },
       }}
     >
       <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <Toolbar sx={{ justifyContent: "center" }}>
+        <Toolbar sx={{ justifyContent: open ? "center" : "center", px: 1 }}>
           <Box
             component="img"
-            src={disastechLogo}
+            src={open ? disastechLogo : disastechIcon}
             alt="Disastech"
             sx={{
-              maxWidth: "80%",
+              maxWidth: open ? "80%" : 28,
               maxHeight: 28,
               objectFit: "contain",
             }}
@@ -54,25 +64,32 @@ export default function Sidebar({ width }: Props) {
         </Toolbar>
 
         <List sx={{ flexGrow: 1 }}>
+          <ListItemButton onClick={() => navigate("/dashboard")}>
+            <ListItemIcon>
+              <AccountTreeOutlinedIcon />
+            </ListItemIcon>
+            {open && <ListItemText primary="Firma Süreci" />}
+          </ListItemButton>
+
           <ListItemButton onClick={() => navigate("/meetings")}>
             <ListItemIcon>
               <EventIcon />
             </ListItemIcon>
-            <ListItemText primary="Toplantılar" />
+            {open && <ListItemText primary="Toplantılar" />}
           </ListItemButton>
 
           <ListItemButton onClick={() => navigate("/accounts")}>
             <ListItemIcon>
               <BusinessIcon />
             </ListItemIcon>
-            <ListItemText primary="Firmalar" />
+            {open && <ListItemText primary="Firmalar" />}
           </ListItemButton>
 
           <ListItemButton onClick={() => navigate("/calendar")}>
             <ListItemIcon>
               <CalendarMonthIcon />
             </ListItemIcon>
-            <ListItemText primary="Takvim" />
+            {open && <ListItemText primary="Takvim" />}
           </ListItemButton>
 
           {superAdmin && (
@@ -80,7 +97,7 @@ export default function Sidebar({ width }: Props) {
               <ListItemIcon>
                 <AdminPanelSettingsIcon />
               </ListItemIcon>
-              <ListItemText primary="Admin" />
+              {open && <ListItemText primary="Admin" />}
             </ListItemButton>
           )}
         </List>
@@ -90,7 +107,7 @@ export default function Sidebar({ width }: Props) {
             <ListItemIcon>
               <LogoutIcon />
             </ListItemIcon>
-            <ListItemText primary="Çıkış Yap" />
+            {open && <ListItemText primary="Çıkış Yap" />}
           </ListItemButton>
         </List>
       </Box>

@@ -10,7 +10,9 @@ public interface ContactService {
     ContactEntity create(
             UUID accountId,
             String fullName,
-            String email
+            String email,
+            String phone,
+            String title
     );
 
     List<ContactEntity> findByAccount(UUID accountId);
@@ -18,7 +20,7 @@ public interface ContactService {
 
     List<ContactEntity> findByAccountAndActiveTrue(UUID accountId);
 
-    ContactEntity update(UUID contactId, String fullName, String email);
+    ContactEntity update(UUID contactId, String fullName, String email, String phone, String title);
 
 
 

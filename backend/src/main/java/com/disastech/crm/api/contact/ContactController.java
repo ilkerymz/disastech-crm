@@ -32,7 +32,10 @@ public class ContactController {
         ContactEntity contact = contactService.create(
                 request.accountId,
                 request.fullName,
-                request.email
+                request.email,
+                request.phone,
+                request.title
+
         );
 
         return toResponse(contact);
@@ -65,7 +68,7 @@ public class ContactController {
 
     @PutMapping("/{id}")
     public ContactResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateContactRequest request){
-        ContactEntity contact = contactService.update(id, request.fullName, request.email);
+        ContactEntity contact = contactService.update(id, request.fullName, request.email, request.phone, request.title);
         return toResponse(contact);
     }
 
@@ -79,6 +82,8 @@ public class ContactController {
         r.accountId = entity.getAccount().getId();
         r.fullName = entity.getFullName();
         r.email = entity.getEmail();
+        r.phone = entity.getPhone();
+        r.title = entity.getTitle();
 
         return r;
     }

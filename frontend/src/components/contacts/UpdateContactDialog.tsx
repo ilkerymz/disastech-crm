@@ -28,14 +28,18 @@ export default function UpdateContactDialog({
 
   const [form, setForm] = useState({
     fullName: "",
+    title: "",
     email: "",
+    phone: "",
   });
 
   useEffect(() => {
     if (!contact) return;
     setForm({
       fullName: contact.fullName || "",
+      title: contact.title || "",
       email: contact.email || "",
+      phone: contact.phone || "",
     });
   }, [contact]);
 
@@ -43,10 +47,14 @@ export default function UpdateContactDialog({
     mutationFn: (payload: {
       id: string;
       fullName: string;
+      title?: string;
       email?: string;
+      phone?: string;
     }) => updateContact(payload.id, {
       fullName: payload.fullName,
+      title: payload.title,
       email: payload.email,
+      phone: payload.phone,
     }),
     onSuccess: () => {
       if (contact?.accountId) {
@@ -69,7 +77,9 @@ export default function UpdateContactDialog({
     mutation.mutate({
       id: contact.id,
       fullName: form.fullName,
+      title: form.title || undefined,
       email: form.email || undefined,
+      phone: form.phone || undefined,
     });
   };
 
@@ -92,6 +102,22 @@ export default function UpdateContactDialog({
             label="E-posta"
             name="email"
             value={form.email}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          <TextField
+            label="Ünvan"
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          <TextField
+            label="Telefon"
+            name="phone"
+            value={form.phone}
             onChange={handleChange}
             fullWidth
           />

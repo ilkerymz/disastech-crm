@@ -1,4 +1,6 @@
 import {
+  Alert,
+  Autocomplete,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -10,13 +12,15 @@ import {
 } from "@mui/material";
 
 import { useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateAccount } from "../../api/account.api";
 import type { Account, AccountStatus } from "../../types/account";
 import {
   ACCOUNT_STATUS_OPTIONS,
   getAccountStatusLabel,
 } from "../../constants/accountStatus";
+import { getAssignableUsers } from "../../api/user.api";
+import type { AdminUser } from "../../api/admin.api";
 
 interface Props {
   open: boolean;
@@ -30,20 +34,42 @@ export default function UpdateAccountDialog({
   onClose,
 }: Props) {
   const queryClient = useQueryClient();
+  const { data: users = [], isLoading: usersLoading, isError: usersError } =
+    useQuery<AdminUser[]>({
+      queryKey: ["assignable-users"],
+      queryFn: getAssignableUsers,
+    });
 
   const [form, setForm] = useState<{
     industry: string;
+    phone: string;
+    email: string;
     status: AccountStatus;
+    responsibleUser: AdminUser | null;
   }>({
     industry: "",
+    phone: "",
+    email: "",
     status: "ACTIVE",
+    responsibleUser: null,
   });
 
   useEffect(() => {
     if (!account) return;
     setForm({
       industry: account.industry || "",
+      phone: account.phone || "",
+      email: account.email || "",
       status: account.status || "ACTIVE",
+      responsibleUser:
+        account.responsibleUserId && account.responsibleUserName
+          ? {
+              id: account.responsibleUserId,
+              fullName: account.responsibleUserName,
+              email: "",
+              role: "",
+            }
+          : null,
     });
   }, [account]);
 
@@ -51,14 +77,21 @@ export default function UpdateAccountDialog({
     mutationFn: (payload: {
       id: string;
       industry?: string;
+      phone?: string;
+      email?: string;
       status: AccountStatus;
+      responsibleUserId?: string;
     }) =>
       updateAccount(payload.id, {
         industry: payload.industry,
+        phone: payload.phone,
+        email: payload.email,
         status: payload.status,
+        responsibleUserId: payload.responsibleUserId,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["processes"] });
       onClose();
     },
   });
@@ -74,7 +107,10 @@ export default function UpdateAccountDialog({
     mutation.mutate({
       id: account.id,
       industry: form.industry || undefined,
+      phone: form.phone || undefined,
+      email: form.email || undefined,
       status: form.status,
+      responsibleUserId: form.responsibleUser?.id,
     });
   };
 
@@ -84,12 +120,56 @@ export default function UpdateAccountDialog({
 
       <DialogContent>
         <Stack spacing={2} mt={1}>
+          {usersError && (
+            <Alert severity="warning">
+              Sorumlu kişi listesi alınamadı. Backend tarafında kullanıcı seçim endpointi gerekir.
+            </Alert>
+          )}
+
           <TextField
             label="Sektör / Endüstri"
             name="industry"
             value={form.industry}
             onChange={handleChange}
             fullWidth
+          />
+
+          <TextField
+            label="Telefon"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          <TextField
+            label="E-posta"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          <Autocomplete
+            options={users}
+            loading={usersLoading}
+            value={form.responsibleUser}
+            onChange={(_, value) =>
+              setForm((prev) => ({
+                ...prev,
+                responsibleUser: value,
+              }))
+            }
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            getOptionLabel={(option) => option.fullName}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Sorumlu Kişi"
+                placeholder="Bir kullanıcı seçin"
+              />
+            )}
           />
 
           <TextField
@@ -114,7 +194,7 @@ export default function UpdateAccountDialog({
         <Button
           variant="contained"
           onClick={handleSubmit}
-          disabled={mutation.isPending || !account}
+          disabled={mutation.isPending || !account || !form.responsibleUser?.id}
         >
           Güncelle
         </Button>

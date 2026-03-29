@@ -8,4 +8,6 @@ public class ContactResponse {
     public UUID accountId;
     public String fullName;
     public String email;
+    public String phone;
+    public String title;
 }

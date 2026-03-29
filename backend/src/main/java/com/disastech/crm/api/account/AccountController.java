@@ -29,7 +29,11 @@ public class AccountController {
         AccountEntity account = accountService.create(
                 request.name,
                 request.industry,
-                request.status
+                request.status,
+                request.responsibleUserId,
+                request.email,
+                request.phone
+
         );
 
         return toResponse(account);
@@ -54,7 +58,8 @@ public class AccountController {
 
     @PutMapping("/{id}")
     public AccountResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateAccountRequest request) {
-        AccountEntity account = accountService.update(id, request.industry, request.status);
+        AccountEntity account = accountService.update(id, request.industry, request.status, request.responsibleUserId, request.email, request.phone
+        );
         return toResponse(account);
     }
 
@@ -78,6 +83,10 @@ public class AccountController {
         r.industry = entity.getIndustry();
         r.active = entity.getActive();
         r.status = entity.getStatus();
+        r.responsibleUserId = entity.getResponsibleUser() != null ? entity.getResponsibleUser().getId() : null;
+        r.responsibleUserName = entity.getResponsibleUser() != null ? entity.getResponsibleUser().getFullName() : null;
+        r.email = entity.getEmail() != null ? entity.getEmail() : null;
+        r.phone = entity.getPhone() != null ? entity.getPhone() : null;
 
         return r;
     }

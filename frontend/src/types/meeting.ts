@@ -5,6 +5,7 @@ export type SalesStage =
   | "OFFER"
   | "REVISION"
   | "CONTRACT"
+  | "POSITIVE"
   | "NEGATIVE";
 export type LossReason =
   | "PRICE"
@@ -12,8 +13,21 @@ export type LossReason =
   | "BUDGET"
   | "PRIORITY_CHANGED";
 
+export interface MeetingAttendee {
+  id?: string;
+  attendeeType: "OWNER" | "CONTACT" | "USER";
+  userId?: string;
+  contactId?: string;
+  email: string;
+  displayName: string;
+  isPrimary?: boolean;
+}
+
 export interface Meeting {
   id: number;
+  accountId?: string;
+  ownerUserId?: string;
+  contactId?: string;
   start: string;
   end: string;
   status: string;
@@ -21,18 +35,12 @@ export interface Meeting {
   accountName: string;
   subject: string
   contactName: string;
+  contactTitle?: string;
   hasCalendarEvent: boolean;
   industry?: string;
   accountStatus?: string;
-  salesStatus?: SalesStatus;
-  salesStage?: SalesStage;
-  offerAmount?: number;
-  lastMeetingDate?: string;
-  lossReason?: LossReason;
-  nextAction?: string;
   userName?: string;
-  latestNote?: string;
-  noteCount?: number;
   notes?: string;
   mailStatus: "NOT_SENT" | "SENT";
+  attendees?: MeetingAttendee[];
 }

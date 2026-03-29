@@ -6,6 +6,7 @@ export const SALES_STAGE_OPTIONS: SalesStage[] = [
   "OFFER",
   "REVISION",
   "CONTRACT",
+  "POSITIVE",
   "NEGATIVE",
 ];
 
@@ -15,7 +16,18 @@ export const SALES_STAGE_LABELS: Record<SalesStage, string> = {
   OFFER: "Teklif",
   REVISION: "Revizyon",
   CONTRACT: "Sözleşme",
+  POSITIVE: "Olumlu",
   NEGATIVE: "Olumsuz",
+};
+
+export const SALES_STAGE_COLORS: Record<SalesStage, string> = {
+  FIRST_MEETING: "#5f6f65",
+  DEMO: "#1d4ed8",
+  OFFER: "#ca8a04",
+  REVISION: "#7c3aed",
+  CONTRACT: "#0f766e",
+  POSITIVE: "#15803d",
+  NEGATIVE: "#b91c1c",
 };
 
 export const getSalesStageLabel = (stage?: SalesStage | null) => {

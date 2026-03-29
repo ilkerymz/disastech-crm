@@ -20,4 +20,9 @@ public class CreateContactRequest {
     @Size(max = 255)
     public String email;
 
+    public String phone;
+
+    @Size(max = 150)
+    public String title;
+
 }

@@ -3,8 +3,6 @@ package com.disastech.crm.application.meeting;
 import com.disastech.crm.api.meeting.dto.MeetingInvitePreviewResponse;
 import com.disastech.crm.domain.meeting.*;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -18,13 +16,7 @@ public interface MeetingService {
             LocalDateTime start,
             LocalDateTime end,
             String subject,
-            MeetingOutcome outcome,
-            String nextAction,
-            SalesStatus salesStatus,
-            SalesStage salesStage,
-            BigDecimal offerAmount,
-            LocalDate lastMeetingDate,
-            LossReason lossReason
+            String notes
 
 
     );
@@ -35,13 +27,7 @@ public interface MeetingService {
             LocalDateTime end,
             String status,
             String subject,
-            MeetingOutcome outcome,
-            String nextAction,
-            SalesStatus salesStatus,
-            SalesStage salesStage,
-            BigDecimal offerAmount,
-            LocalDate lastMeetingDate,
-            LossReason lossReason
+            String notes
     );
 
     void cancelMeeting(UUID meetingId);
@@ -51,7 +37,15 @@ public interface MeetingService {
     );
 
     List<MeetingEntity> getAllMeetings();
-    void sendMeetingInvite(UUID meetingId, String description);
+
     MeetingInvitePreviewResponse getInvitePreview(UUID meetingId);
+
+    void sendMeetingInvite(
+            UUID meetingId,
+            String description,
+            List<UUID> additionalContactIds,
+            List<UUID> additionalUserIds,
+            List<String> manualEmails
+    );
 
 }
