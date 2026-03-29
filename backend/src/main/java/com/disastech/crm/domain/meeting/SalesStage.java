@@ -7,4 +7,5 @@ public enum SalesStage {
             REVISION,
             CONTRACT,
             NEGATIVE,
+            POSITIVE,
 }

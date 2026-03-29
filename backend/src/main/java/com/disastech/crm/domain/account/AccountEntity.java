@@ -4,6 +4,8 @@ import com.disastech.crm.api.account.AccountStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.disastech.crm.domain.user.UserEntity;
+
 
 @Entity
 @Table(
@@ -30,6 +32,17 @@ public class AccountEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AccountStatus status;
+
+    @Column(length = 50)
+    private String phone;
+
+    @Column(length = 255)
+    private String email;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_user_id")
+    private UserEntity responsibleUser;
+
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -81,6 +94,22 @@ public class AccountEntity {
         this.name = name;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public void setIndustry(String industry) {
         this.industry = industry;
     }
@@ -104,4 +133,14 @@ public class AccountEntity {
     public void setStatus(AccountStatus status) {
         this.status = status;
     }
+
+    public UserEntity getResponsibleUser() {
+        return responsibleUser;
+    }
+
+    public void setResponsibleUser(UserEntity responsibleUser) {
+        this.responsibleUser = responsibleUser;
+    }
+
+
 }

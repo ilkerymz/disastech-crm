@@ -1,5 +1,6 @@
 package com.disastech.crm.infrastructure.google;
 
+import com.disastech.crm.domain.meeting.MeetingAttendeeEntity;
 import com.disastech.crm.domain.meeting.MeetingEntity;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -69,7 +70,11 @@ public class GoogleCalendarService {
      * 📧 İLK DAVETİYEYİ GÖNDERİR
      * Attendees burada İLK KEZ eklenir
      */
-    public void sendInvite(MeetingEntity meeting, String description) throws Exception {
+    public void sendInvite(
+            MeetingEntity meeting,
+            String description,
+            List<MeetingAttendeeEntity> attendees
+    ) throws Exception {
 
         if (meeting.getGoogleEventId() == null) {
             throw new IllegalStateException("Google event yok");
@@ -86,20 +91,19 @@ public class GoogleCalendarService {
             throw new IllegalStateException("Davetiye zaten gönderilmiş");
         }
 
-        List<EventAttendee> attendees = new ArrayList<>();
+        List<EventAttendee> eventAttendees = attendees.stream()
+                .filter(attendee -> attendee.getEmail() != null && !attendee.getEmail().isBlank())
+                .map(attendee -> new EventAttendee()
+                        .setEmail(attendee.getEmail())
+                        .setDisplayName(attendee.getDisplayName()))
+                .toList();
 
-        // Owner her zaman davetli
-        attendees.add(new EventAttendee().setEmail(meeting.getOwner().getEmail()));
+        event.setAttendees(eventAttendees);
 
-        // Contact varsa ekle
-        if (meeting.getContact() != null && meeting.getContact().getEmail() != null) {
-            attendees.add(new EventAttendee().setEmail(meeting.getContact().getEmail()));
-        }
-
-        event.setAttendees(attendees);
-
-        String eventDescFooter = event.getDescription();
-        String eventFinalDesc = description + "\n\n" + eventDescFooter;
+        String eventDescFooter = event.getDescription() == null ? "" : event.getDescription();
+        String eventFinalDesc = description == null || description.isBlank()
+                ? eventDescFooter
+                : description + "\n\n" + eventDescFooter;
 
         event.setDescription(eventFinalDesc);
 
@@ -109,7 +113,7 @@ public class GoogleCalendarService {
                 .execute();
 
         log.info("Google Calendar invite sent. eventId={}, attendees={}",
-                meeting.getGoogleEventId(), attendees);
+                meeting.getGoogleEventId(), eventAttendees);
     }
 
     /**

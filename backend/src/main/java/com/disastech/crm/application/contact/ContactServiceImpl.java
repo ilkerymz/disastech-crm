@@ -30,7 +30,9 @@ public class ContactServiceImpl implements ContactService {
     public ContactEntity create(
             UUID accountId,
             String fullName,
-            String email
+            String email,
+            String phone,
+            String title
     ) {
 
         AccountEntity account = accountRepository.findById(accountId)
@@ -40,6 +42,8 @@ public class ContactServiceImpl implements ContactService {
         contact.setAccount(account);
         contact.setFullName(fullName);
         contact.setEmail(email);
+        contact.setPhone(phone);
+        contact.setTitle(title);
 
         return contactRepository.save(contact);
     }
@@ -71,7 +75,7 @@ public class ContactServiceImpl implements ContactService {
     }
 
     @Override
-    public ContactEntity update(UUID contactId, String fullName, String email) {
+    public ContactEntity update(UUID contactId, String fullName, String email, String phone, String title) {
         ContactEntity contact = contactRepository.findById(contactId)
                 .orElseThrow(() -> new EntityNotFoundException("Contact Not Found"));
 
@@ -81,6 +85,8 @@ public class ContactServiceImpl implements ContactService {
 
         contact.setFullName(fullName);
         contact.setEmail(email);
+        contact.setPhone(phone);
+        contact.setTitle(title);
 
         return contactRepository.save(contact);
     }

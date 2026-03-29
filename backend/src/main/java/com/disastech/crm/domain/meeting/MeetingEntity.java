@@ -24,6 +24,9 @@ public class MeetingEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private AccountEntity account;
 
+    @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MeetingAttendeeEntity> attendees = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contact_id")
     private ContactEntity contact;
@@ -31,10 +34,6 @@ public class MeetingEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_user_id", nullable = false)
     private UserEntity owner;
-
-    @OneToMany(mappedBy = "meeting")
-    private List<MeetingNoteEntity> meetingNotes = new ArrayList<>();
-
 
     @Column(name = "meeting_start", nullable = false)
     private LocalDateTime meetingStart;
@@ -46,77 +45,12 @@ public class MeetingEntity {
     private String status;
     // PLANNED, COMPLETED, CANCELLED, POSTPONED
 
-    @Column(name = "sales_status")
-    @Enumerated(EnumType.STRING)
-    private SalesStatus salesStatus;
-
-    @Column(name = "sales_stage")
-    @Enumerated(EnumType.STRING)
-    private SalesStage salesStage;
-
-    @Column(name = "offer_amount")
-    private BigDecimal offerAmount;
-
-    @Column(name = "last_meeting_date")
-    private LocalDate lastMeetingDate;
-
-    @Column(name = "loss_reason")
-    @Enumerated(EnumType.STRING)
-    private LossReason lossReason;
-
-    public BigDecimal getOfferAmount() {
-        return offerAmount;
-    }
-
-    public void setOfferAmount(BigDecimal offerAmount) {
-        this.offerAmount = offerAmount;
-    }
-
-    public LocalDate getLastMeetingDate() {
-        return lastMeetingDate;
-    }
-
-    public void setLastMeetingDate(LocalDate lastMeetingDate) {
-        this.lastMeetingDate = lastMeetingDate;
-    }
-
-    public LossReason getLossReason() {
-        return lossReason;
-    }
-
-    public void setLossReason(LossReason lossReason) {
-        this.lossReason = lossReason;
-    }
-
-    public SalesStatus getSalesStatus() {
-        return salesStatus;
-    }
-
-    public SalesStage getSalesStage() {
-        return salesStage;
-    }
-
-    public void setSalesStage(SalesStage salesStage) {
-        this.salesStage = salesStage;
-    }
-
-    public void setSalesStatus(SalesStatus salesStatus) {
-        this.salesStatus = salesStatus;
-    }
-//SOLD, PROGRESSING, LOST
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
     @Column(length = 255)
     private String subject;
-
-    @Enumerated(EnumType.STRING)
-    @Column(length = 50)
-    private MeetingOutcome outcome;
-
-    @Column(length = 255)
-    private String nextAction;
 
 
     @Column(name = "google_event_id", unique = true)
@@ -269,23 +203,6 @@ public class MeetingEntity {
         this.subject = subject;
     }
 
-    public MeetingOutcome getOutcome() {
-        return outcome;
-    }
-
-    public void setOutcome(MeetingOutcome outcome) {
-        this.outcome = outcome;
-    }
-
-    public String getNextAction() {
-        return nextAction;
-    }
-
-    public void setNextAction(String nextAction) {
-        this.nextAction = nextAction;
-    }
-
-
     public MailStatus getMailStatus() {
         return mailStatus;
     }
@@ -309,5 +226,8 @@ public class MeetingEntity {
     public void setMailSentByUserId(UUID mailSentByUserId) {
         this.mailSentByUserId = mailSentByUserId;
     }
+
+    public List<MeetingAttendeeEntity> getAttendees() { return attendees; }
+    public void setAttendees(List<MeetingAttendeeEntity> attendees) { this.attendees = attendees; }
 
 }

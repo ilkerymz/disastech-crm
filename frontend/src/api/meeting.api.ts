@@ -1,9 +1,4 @@
-import type {
-  LossReason,
-  Meeting,
-  SalesStage,
-  SalesStatus,
-} from "../types/meeting";
+import type { Meeting } from "../types/meeting";
 import { apiClient } from "./client";
 
 export interface CreateMeetingPayload {
@@ -13,25 +8,20 @@ export interface CreateMeetingPayload {
   start: string;
   end: string;
   subject?: string;
-  outcome?: string;
-  salesStatus?: SalesStatus;
-  salesStage?: SalesStage;
-  offerAmount?: number;
-  lastMeetingDate?: string;
-  lossReason?: LossReason;
-}
-
-export interface MeetingNote {
-  id: string | number;
-  note: string;
-  createdAt: string;
-  createdByName?: string;
+  notes?: string;
 }
 
 export interface InvitePreview {
   subject: string;
   description: string;
   recipients: string[];
+}
+
+export interface SendMeetingInvitePayload {
+  description?: string;
+  additionalContactIds?: string[];
+  additionalUserIds?: string[];
+  manualEmails?: string[];
 }
 
 export const getMeetings = async (): Promise<Meeting[]> => {
@@ -45,31 +35,11 @@ export const createMeeting = async (payload: CreateMeetingPayload) => {
   return res.data;
 };
 
-export const getMeetingNotes = async (
-  meetingId: string
-): Promise<MeetingNote[]> => {
-  const res = await apiClient.get(`/meetings/${meetingId}/notes`);
-  return res.data;
-};
-
-export const addMeetingNote = async (meetingId: string, note: string) => {
-  const res = await apiClient.post(`/meetings/${meetingId}/notes`, { note });
-  return res.data;
-};
-
 export const sendMeetingInvite = async (
   meetingId: string,
-  description?: string
+  payload?: SendMeetingInvitePayload
 ) => {
-  await apiClient.post(
-    `/meetings/${meetingId}/send-invite`,
-    null,
-    description
-      ? {
-          params: { description },
-        }
-      : undefined
-  );
+  await apiClient.post(`/meetings/${meetingId}/send-invite`, payload);
 };
 
 export const getInvitePreview = async (meetingId: string): Promise<InvitePreview> => {

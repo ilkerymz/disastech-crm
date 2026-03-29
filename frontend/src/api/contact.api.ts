@@ -22,7 +22,9 @@ export const getContactsByAccountAndActiveTrue = async (
 export const createContact = async (payload: {
   accountId: string;
   fullName: string;
+  title?: string;
   email?: string;
+  phone?: string;
 }): Promise<Contact> => {
   const res = await apiClient.post("/contacts", payload);
   return res.data;
@@ -36,7 +38,9 @@ export const updateContact = async (
   id: string,
   payload: {
     fullName: string;
+    title?: string;
     email?: string;
+    phone?: string;
   }
 ): Promise<Contact> => {
   const res = await apiClient.put(`/contacts/${id}`, payload);

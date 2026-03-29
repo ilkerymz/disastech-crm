@@ -1,11 +1,13 @@
-package com.disastech.crm.api.meeting.dto;
+package com.disastech.crm.api.process.dto;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class MeetingNoteResponse {
+public class ProcessNoteResponse {
     public UUID id;
     public String note;
     public LocalDateTime createdAt;
     public String createdByName;
+    public Boolean isNegativeReason;
+
 }

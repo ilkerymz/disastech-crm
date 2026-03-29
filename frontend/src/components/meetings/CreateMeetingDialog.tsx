@@ -7,8 +7,6 @@ import {
   TextField,
   Stack,
   Autocomplete,
-  MenuItem,
-  Box,
 } from "@mui/material";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -25,24 +23,7 @@ import { getUserIdFromToken } from "../../auth/token";
 
 import type { Account } from "../../types/account";
 import type { Contact } from "../../types/contact";
-import type {
-  LossReason,
-  SalesStage,
-  SalesStatus,
-} from "../../types/meeting";
-import {
-  SALES_STATUS_OPTIONS,
-  SALES_STATUS_COLORS,
-  getSalesStatusLabel,
-} from "../../constants/salesStatus";
-import {
-  SALES_STAGE_OPTIONS,
-  getSalesStageLabel,
-} from "../../constants/salesStage";
-import {
-  LOSS_REASON_OPTIONS,
-  getLossReasonLabel,
-} from "../../constants/lossReason";
+import { formatContactDisplay } from "../../utils/contact";
 
 interface Props {
   open: boolean;
@@ -62,11 +43,7 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
     subject: "",
     start: null as Dayjs | null,
     end: null as Dayjs | null,
-    salesStatus: "PROGRESSING" as SalesStatus,
-    salesStage: "FIRST_MEETING" as SalesStage,
-    offerAmount: "",
-    lastMeetingDate: "",
-    lossReason: "" as LossReason | "",
+    notes: "",
   });
 
   // -----------------------------
@@ -119,12 +96,7 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
       subject: form.subject,
       start,
       end,
-      salesStatus: form.salesStatus,
-      salesStage: form.salesStage,
-      offerAmount:
-        form.offerAmount === "" ? undefined : Number(form.offerAmount),
-      lastMeetingDate: form.lastMeetingDate || undefined,
-      lossReason: form.lossReason || undefined,
+      notes: form.notes.trim() || undefined,
     });
   };
 
@@ -161,10 +133,11 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
             {/* İLGİLİ KİŞİ */}
             <Autocomplete
               options={contacts}
-              getOptionLabel={(option) => option.fullName}
+              getOptionLabel={(option) => formatContactDisplay(option)}
               value={selectedContact}
               onChange={(_, value) => setSelectedContact(value)}
               disabled={!selectedAccount}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => (
                 <TextField {...params} label="İlgili Kişi" />
               )}
@@ -180,110 +153,16 @@ export default function CreateMeetingDialog({ open, onClose }: Props) {
               fullWidth
             />
 
-            {/* SATIŞ DURUMU */}
             <TextField
-              select
-              label="Satış Durumu"
-              value={form.salesStatus}
+              label="Toplantı Notu"
+              value={form.notes}
               onChange={(e) =>
-                setForm({ ...form, salesStatus: e.target.value as SalesStatus })
-              }
-              SelectProps={{
-                renderValue: (value) => {
-                  const status = value as SalesStatus;
-                  return (
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Box
-                        sx={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: "50%",
-                          bgcolor: SALES_STATUS_COLORS[status],
-                          border: "1px solid #1f1f1f",
-                        }}
-                      />
-                      <span>{getSalesStatusLabel(status)}</span>
-                    </Stack>
-                  );
-                },
-              }}
-              fullWidth
-            >
-              {SALES_STATUS_OPTIONS.map((status) => (
-                <MenuItem key={status} value={status}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Box
-                      sx={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: "50%",
-                        bgcolor: SALES_STATUS_COLORS[status],
-                        border: "1px solid #1f1f1f",
-                      }}
-                    />
-                    <span>{getSalesStatusLabel(status)}</span>
-                  </Stack>
-                </MenuItem>
-              ))}
-            </TextField>
-
-            {/* SATIŞ AŞAMASI */}
-            <TextField
-              select
-              label="Satış Aşaması"
-              value={form.salesStage}
-              onChange={(e) =>
-                setForm({ ...form, salesStage: e.target.value as SalesStage })
+                setForm({ ...form, notes: e.target.value })
               }
               fullWidth
-            >
-              {SALES_STAGE_OPTIONS.map((stage) => (
-                <MenuItem key={stage} value={stage}>
-                  {getSalesStageLabel(stage)}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            {/* TEKLİF TUTARI */}
-            <TextField
-              label="Teklif Tutarı (₺)"
-              type="number"
-              value={form.offerAmount}
-              onChange={(e) =>
-                setForm({ ...form, offerAmount: e.target.value })
-              }
-              fullWidth
+              multiline
+              minRows={3}
             />
-
-            {/* SON TOPLANTI */}
-            <TextField
-              label="Son Toplantı"
-              type="date"
-              value={form.lastMeetingDate}
-              onChange={(e) =>
-                setForm({ ...form, lastMeetingDate: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-
-            {/* KAYBEDİLME NEDENİ */}
-            <TextField
-              select
-              label="Kaybedilme Nedeni"
-              value={form.lossReason}
-              onChange={(e) =>
-                setForm({ ...form, lossReason: e.target.value as LossReason | "" })
-              }
-              fullWidth
-            >
-              <MenuItem value="">-</MenuItem>
-              {LOSS_REASON_OPTIONS.map((reason) => (
-                <MenuItem key={reason} value={reason}>
-                  {getLossReasonLabel(reason)}
-                </MenuItem>
-              ))}
-            </TextField>
 
             {/* BAŞLANGIÇ */}
             <DateTimePicker

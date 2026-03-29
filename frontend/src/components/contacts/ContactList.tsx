@@ -88,7 +88,7 @@ export default function ContactList({ accountId }: Props) {
           >
             <ListItemText
               primary={contact.fullName}
-              secondary={contact.email}
+              secondary={[contact.title, contact.email, contact.phone].filter(Boolean).join(" • ")}
             />
           </ListItem>
         ))}

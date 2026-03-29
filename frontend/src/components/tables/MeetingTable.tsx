@@ -1,12 +1,10 @@
 import { DataGrid } from "@mui/x-data-grid";
 import type { GridColDef } from "@mui/x-data-grid";
-import type { Meeting, SalesStatus } from "../../types/meeting";
+import type { Meeting } from "../../types/meeting";
 import { useState, type MouseEvent } from "react";
 
 import {
   IconButton,
-  Stack,
-  Box,
   Tooltip,
   Menu,
   MenuItem,
@@ -15,21 +13,14 @@ import {
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import NoteAddOutlinedIcon from "@mui/icons-material/NoteAddOutlined";
-import {
-  SALES_STATUS_COLORS,
-  getSalesStatusLabel,
-} from "../../constants/salesStatus";
-import { getSalesStageLabel } from "../../constants/salesStage";
-import { getLossReasonLabel } from "../../constants/lossReason";
 import { getAccountStatusLabel } from "../../constants/accountStatus";
+import { formatContactDisplay } from "../../utils/contact";
 
 interface Props {
   rows: Meeting[];
   onRequestSendInvite: (meetingId: string) => void;
   onEdit: (meeting: Meeting) => void;
   onCancel: (id: string) => void;
-  onOpenNotes: (meeting: Meeting) => void;
   onRowClick?: (meeting: Meeting) => void;
 }
 
@@ -38,7 +29,6 @@ export default function MeetingTable({
   onRequestSendInvite,
   onEdit,
   onCancel,
-  onOpenNotes,
   onRowClick,
 }: Props) {
   const [actionsAnchorEl, setActionsAnchorEl] = useState<null | HTMLElement>(null);
@@ -59,7 +49,12 @@ export default function MeetingTable({
 
   const columns: GridColDef[] = [
     { field: "accountName", headerName: "Firma", flex: 1 },
-    { field: "contactName", headerName: "İlgili Kişi", flex: 1 },
+    {
+      field: "contactName",
+      headerName: "İlgili Kişi",
+      flex: 1,
+      valueGetter: (_, row) => formatContactDisplay(row as Meeting),
+    },
     { field: "industry", headerName: "Sektör", flex: 1 },
     {
       field: "accountStatus",
@@ -68,59 +63,11 @@ export default function MeetingTable({
       valueFormatter: (value) => getAccountStatusLabel(value),
     },
     {
-      field: "salesStatus",
-      headerName: "Satış Durumu",
+      field: "userName",
+      headerName: "Sorumlu Kişi",
       flex: 1,
-      renderCell: (params) => {
-        const status = params.value as SalesStatus | undefined;
-        if (!status) return "-";
-
-        return (
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Box
-              sx={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                bgcolor: SALES_STATUS_COLORS[status],
-                border: "1px solid #1f1f1f",
-              }}
-            />
-            <span>{getSalesStatusLabel(status)}</span>
-          </Stack>
-        );
-      },
+      valueFormatter: (value) => value || "-",
     },
-    {
-      field: "salesStage",
-      headerName: "Satış Aşaması",
-      flex: 1,
-      valueFormatter: (value) => getSalesStageLabel(value),
-    },
-    { field: "userName", headerName: "Sorumlu Kişi", flex: 1 },
-    {
-      field: "lossReason",
-      headerName: "Kaybedilme Nedeni",
-      flex: 1,
-      valueFormatter: (value) => getLossReasonLabel(value),
-    },
-    {
-      field: "offerAmount",
-      headerName: "Teklif Tutarı (₺)",
-      flex: 1,
-      valueFormatter: (value) =>
-        value === null || value === undefined || value === ""
-          ? "-"
-          : new Intl.NumberFormat("tr-TR").format(Number(value)),
-    },
-    {
-      field: "lastMeetingDate",
-      headerName: "Son Toplantı",
-      flex: 1,
-      valueFormatter: (value) =>
-        value ? new Date(value).toLocaleDateString("tr-TR") : "-",
-    },
-    { field: "nextAction", headerName: "Sonraki Adım", flex: 1 },
     {
       field: "notes",
       headerName: "Not",
@@ -128,39 +75,17 @@ export default function MeetingTable({
       flex: 1.4,
       sortable: false,
       renderCell: (params) => {
-        const meeting = params.row as Meeting;
-        const lastNote = meeting.latestNote ?? meeting.notes ?? "";
-
         return (
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ width: "100%" }}>
-            <Tooltip title="Not Ekle">
-              <IconButton
-                size="small"
-                sx={{ width: 24, height: 24 }}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenNotes(meeting);
-                }}
-              >
-                <NoteAddOutlinedIcon sx={{ fontSize: 16 }} />
-              </IconButton>
-            </Tooltip>
-            <Typography
-              variant="body2"
-              sx={{
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpenNotes(meeting);
-              }}
-            >
-              {lastNote || "Hızlı not"}
-            </Typography>
-          </Stack>
+          <Typography
+            variant="body2"
+            sx={{
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {(params.row as Meeting).notes || "-"}
+          </Typography>
         );
       },
     },

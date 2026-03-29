@@ -27,7 +27,9 @@ export default function CreateContactDialog({
 
   const [form, setForm] = useState({
     fullName: "",
+    title: "",
     email: "",
+    phone: "",
   });
 
   const mutation = useMutation({
@@ -37,7 +39,7 @@ export default function CreateContactDialog({
         queryKey: ["contacts", accountId],
       });
       onClose();
-      setForm({ fullName: "", email: "" });
+      setForm({ fullName: "", title: "", email: "", phone: "" });
     },
   });
 
@@ -51,7 +53,9 @@ export default function CreateContactDialog({
     mutation.mutate({
       accountId,
       fullName: form.fullName,
+      title: form.title || undefined,
       email: form.email || undefined,
+      phone: form.phone || undefined,
     });
   };
 
@@ -74,6 +78,22 @@ export default function CreateContactDialog({
             label="E-posta"
             name="email"
             value={form.email}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          <TextField
+            label="Ünvan"
+            name="title"
+            value={form.title}
+            onChange={handleChange}
+            fullWidth
+          />
+
+          <TextField
+            label="Telefon"
+            name="phone"
+            value={form.phone}
             onChange={handleChange}
             fullWidth
           />

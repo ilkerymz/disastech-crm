@@ -29,6 +29,12 @@ public class ContactEntity {
     @Column(nullable = false, length = 150)
     private String email;
 
+    @Column(length = 50)
+    private String phone;
+
+    @Column(name = "title", length = 150)
+    private String title;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
@@ -78,6 +84,14 @@ public class ContactEntity {
         return fullName;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
     public void setFullName(String fullName) {
         this.fullName = fullName;
     }
@@ -104,5 +118,13 @@ public class ContactEntity {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }

@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AccountService {
-    AccountEntity create (String name, String industry, AccountStatus status);
+    AccountEntity create (String name, String industry, AccountStatus status, UUID responsibleUserId, String email, String phone);
     List<AccountEntity> findAll();
     void deactivate(String accountId);
     void delete(String accountId);
     List<AccountEntity> findByActiveTrue();
-    AccountEntity update(UUID accountId, String industry, AccountStatus status);
+    AccountEntity update(UUID accountId, String industry, AccountStatus status, UUID responsibleUserId, String email, String phone);
 }

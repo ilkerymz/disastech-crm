@@ -66,4 +66,4 @@ export const isSuperAdmin = () => {
   return email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.trim().toLowerCase();
 };
 
-export const getPostLoginRoute = () => (isSuperAdmin() ? "/admin/users" : "/meetings");
+export const getPostLoginRoute = () => "/dashboard";

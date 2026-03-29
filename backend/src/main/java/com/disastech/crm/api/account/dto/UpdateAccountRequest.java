@@ -1,8 +1,11 @@
 package com.disastech.crm.api.account.dto;
 
 import com.disastech.crm.api.account.AccountStatus;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.util.UUID;
 
 public class UpdateAccountRequest {
 
@@ -11,4 +14,8 @@ public class UpdateAccountRequest {
 
     @NotNull(message = "Account status is required")
     public AccountStatus status;
+    public UUID responsibleUserId;
+    public String phone;
+    @Email
+    public String email;
 }
