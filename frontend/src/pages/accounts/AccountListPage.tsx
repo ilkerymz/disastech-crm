@@ -31,6 +31,7 @@ export default function AccountListPage() {
   const [updateOpen, setUpdateOpen] = useState(false);
   const [contactsOpen, setContactsOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [companyFilter, setCompanyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [responsibleFilter, setResponsibleFilter] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
@@ -72,7 +73,13 @@ export default function AccountListPage() {
   }, [accounts]);
 
   const filteredAccounts = useMemo(() => {
+    const normalizedCompanyFilter = normalizeText(companyFilter);
+
     return accounts.filter((account) => {
+      const matchesCompany =
+        !normalizedCompanyFilter ||
+        normalizeText(account.name ?? "").includes(normalizedCompanyFilter);
+
       const matchesStatus =
         !statusFilter || account.status === statusFilter;
 
@@ -83,9 +90,14 @@ export default function AccountListPage() {
         !industryFilter ||
         normalizeText(account.industry ?? "") === normalizeText(industryFilter);
 
-      return matchesStatus && matchesResponsible && matchesIndustry;
+      return (
+        matchesCompany &&
+        matchesStatus &&
+        matchesResponsible &&
+        matchesIndustry
+      );
     });
-  }, [accounts, industryFilter, responsibleFilter, statusFilter]);
+  }, [accounts, companyFilter, industryFilter, responsibleFilter, statusFilter]);
 
   if (isLoading) return <div>Yükleniyor...</div>;
   if (isError) return <div>Hata oluştu</div>;
@@ -151,6 +163,7 @@ export default function AccountListPage() {
             size="small"
             variant="text"
             onClick={() => {
+              setCompanyFilter("");
               setStatusFilter("");
               setResponsibleFilter("");
               setIndustryFilter("");
@@ -172,7 +185,7 @@ export default function AccountListPage() {
             gridTemplateColumns: {
               xs: "1fr",
               sm: "repeat(2, minmax(0, 1fr))",
-              lg: "1fr 1fr 1fr",
+              lg: "1.2fr 0.9fr 0.9fr 0.9fr",
             },
             gap: 1,
             p: 1,
@@ -188,6 +201,26 @@ export default function AccountListPage() {
             },
           }}
         >
+          <TextField
+            label="Şirket Adı"
+            value={companyFilter}
+            onChange={(event) => setCompanyFilter(event.target.value)}
+            fullWidth
+            size="small"
+            slotProps={{
+              inputLabel: { shrink: true },
+            }}
+            sx={{
+              "& .MuiInputLabel-root": {
+                fontSize: 13,
+              },
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "#fff",
+                borderRadius: 2,
+              },
+            }}
+          />
+
           <TextField
             select
             value={statusFilter}
